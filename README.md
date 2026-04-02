@@ -50,4 +50,22 @@ For a comprehensive guide on the language syntax, built-in modules, and advanced
 
 ---
 
+## 🤝 Contributing
+
+We love contributions! Whether it's reporting a bug, suggesting a feature, or submitting a PR, your help is welcome.
+
+Read our **[Contributing Guide](./.github/CONTRIBUTING.md)** to get started.
+
+## 🏛️ Community & Support
+
+- **Discord**: Connect with the community (Looking for **SwyftPain**).
+- **Issues**: Report problems through the **[Bug Report Form](https://github.com/mrmrcl/sp_lang/issues/new?template=bug_report.yml)**.
+- **Direct Support**: Check the **[Support Guide](./SUPPORT.md)** for more options.
+
+## 💖 Support the Project
+
+If you find SP useful and want to support its development, you can **[Sponsor](https://github.com/mrmrcl/sp_lang/sponsors)** this repository or **[Donate via PayPal](https://paypal.me/mrjohnnyjo)**.
+
+---
+
 Happy Coding with **SP**!
