@@ -79,6 +79,7 @@ set arr2 = [0, ...arr1, 3] // [0, 1, 2, 3]
 
 set obj1 = { a: 1 }
 set obj2 = { ...obj1, b: 2 } // { a: 1, b: 2 }
+```
 
 ### BigInts
 For working with arbitrary-precision integers, use the `n` suffix.
@@ -86,7 +87,6 @@ For working with arbitrary-precision integers, use the `n` suffix.
 set big = 1000000000000000000n
 set small = 10n
 console.show(big + small) // 1000000000000000010n
-```
 ```
 
 ---
@@ -124,6 +124,7 @@ define sumAll = (...args) => {
     for n in args { total = total + n }
     return total
 }
+```
 
 ### Implicit Returns
 Functions in SP return the value of the last expression in their block if no `return` is used.
@@ -133,7 +134,6 @@ define multiply = (a, b) => a * b // Implicitly returns a * b
 define check = (x) => {
     if x > 10 { "Big" } else { "Small" } // Implicitly returns branch value
 }
-```
 ```
 
 ### Callbacks (Higher-Order Functions)
@@ -261,7 +261,6 @@ scores.set("X", 1).set("Y", 2).forEach((k, v) => {
 ```
 
 Mention: `HashMap` is a valid alias for `Map`.
-```
 
 ### 📅 `Date`
 Interact with system time and timestamps.
@@ -292,6 +291,7 @@ class Robot {
     define init = (id) => this.id = id
     define charge = () => console.show("Robot {this.id} charged.")
 }
+```
 
 ### Access Modifiers
 SP supports several property and class modifiers for better encapsulation:
@@ -299,6 +299,7 @@ SP supports several property and class modifiers for better encapsulation:
 - **`private`**: Only accessible within the class itself.
 - **`abstract class`**: A base class that cannot be instantiated directly.
 
+```sp
 set bot = Robot("SP-1")
 bot.charge()
 ```
