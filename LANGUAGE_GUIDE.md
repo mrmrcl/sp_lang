@@ -396,6 +396,11 @@ When compiling your addon, there are a few critical requirements:
 | **Rust** | `cargo build --release` (with `cdylib` in `Cargo.toml`) |
 | **Go** | `go build -o libmy_addon.so -buildmode=c-shared main.go` |
 | **Odin** | `odin build addon.odin -build-mode:shared -out:libmy_addon.so` |
+| **Nim** | `nim c --app:lib -d:release addon.nim` |
+| **Crystal** | `crystal build --shared addon.cr` |
+| **Swift** | `swiftc -emit-library -o libmy_addon.so addon.swift` |
+| **D** | `ldc2 -shared addon.d -of=libmy_addon.so` |
+| **FreePascal** | `fpc -Mdelphi -Tlinux -Pauto -Wl-shared addon.pas` |
 
 > [!TIP]
 > Always ensure your shared object starts with the `lib` prefix (e.g., `libmath.so`) to be correctly discovered by the `use` statement in SP.

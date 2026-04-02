@@ -44,8 +44,10 @@ pub const StdVector = extern struct {
 export fn add_numbers(interp: ?*anyopaque, args: *const StdVector) u64 {
     _ = interp;
     if (args.len() < 2) return 0;
-    const v1, v2 = .{ args.start[0].bits, args.start[1].bits };
-    // ...
+    const v1 = args.start[0].bits;
+    const v2 = args.start[1].bits;
+    _ = v1; _ = v2;
+    return 0; // Placeholder
 }
 ```
 **Compile:** `zig build-lib -dynamic addon.zig -femit-bin=libmy_addon.so`
