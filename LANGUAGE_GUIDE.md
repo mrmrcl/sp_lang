@@ -409,6 +409,11 @@ When compiling your addon, there are a few critical requirements:
 | **Kotlin** | `kotlinc-native addon.kt -produce library -o libmy_addon` |
 | **Haskell** | `ghc -shared -dynamic -fPIC addon.hs -o libmy_addon.so` |
 | **Fortran** | `gfortran -shared -fPIC addon.f90 -o libmy_addon.so` |
+| **Assembly** | `nasm -f elf64 addon.asm -o addon.o && gcc -shared -fPIC addon.o -o libmy_addon.so` |
+| **COBOL** | `cobc -z -O3 -shared addon.cob -o libmy_addon.so` |
+| **LOLCODE** | `gcc -shared -fPIC addon.c -llolcode -o libmy_addon.so` |
+| **Brainfuck** | `gcc -shared -fPIC bf_wrapper.c -o libmy_addon.so` |
+| **Common Lisp** | `ecl -build-node shared-library -o libmy_addon.so addon.lisp` |
 
 > [!TIP]
 > Always ensure your shared object starts with the `lib` prefix (e.g., `libmath.so`) to be correctly discovered by the `use` statement in SP.

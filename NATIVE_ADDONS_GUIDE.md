@@ -43,6 +43,11 @@ The following examples demonstrate how to implement a basic `add_numbers` functi
 - [🎯 Kotlin](#-kotlin)
 - [λ Haskell](#-haskell)
 - [🔢 Fortran](#-fortran)
+- [⚙️ Assembly (x86_64)](#-assembly-x86_64)
+- [💼 COBOL](#-cobol)
+- [🐱 LOLCODE](#-lolcode)
+- [💀 Brainfuck](#-brainfuck)
+- [🔱 Common Lisp](#-common-lisp)
 
 ---
 
@@ -478,6 +483,117 @@ function add_numbers(interp, args) bind(c, name="add_numbers")
 end function
 ```
 **Compile:** `gfortran -shared -fPIC addon.f90 -o libmy_addon.so`
+
+---
+
+### ⚙️ Assembly (x86_64)
+For the ultimate performance, you can write addons in pure assembly. This example uses **NASM** and standard System V ABI calling conventions.
+
+```nasm
+; addon.asm
+; rdi = interp, rsi = args (sp_args*)
+section .text
+global add_numbers
+
+add_numbers:
+    mov rax, [rsi + 8]  ; rax = finish
+    sub rax, [rsi]      ; rax = finish - start
+    cmp rax, 16
+    jl .error           ; Less than 2 doubles?
+
+    mov r8, [rsi]       ; r8 = start
+    mov r9, [r8]        ; r9 = v1.bits
+    mov r10, [r8 + 8]   ; r10 = v2.bits
+
+    ; NaN check (SP_IS_NUMBER)
+    mov r11, 0x7FF0000000000000
+    mov rdx, r9
+    and rdx, r11
+    cmp rdx, r11
+    je .error
+    mov rdx, r10
+    and rdx, r11
+    cmp rdx, r11
+    je .error
+
+    movq xmm0, r9
+    movq xmm1, r10
+    addsd xmm0, xmm1    ; Floating point addition
+    movq rax, xmm0      ; Bitwise return
+    ret
+
+.error:
+    xor rax, rax
+    ret
+```
+**Compile:** `nasm -f elf64 addon.asm -o addon.o && gcc -shared -fPIC addon.o -o libmy_addon.so`
+
+---
+
+### 💼 COBOL
+Even business logic from the 60s can run on SP! Using **GnuCOBOL**, you can export C-compatible symbols.
+
+```cobol
+IDENTIFICATION DIVISION.
+PROGRAM-ID. add_numbers.
+DATA DIVISION.
+LINKAGE SECTION.
+01 INTERP USAGE POINTER.
+01 ARGS-PTR USAGE POINTER.
+01 ARGS.
+    05 START-PTR USAGE POINTER.
+    05 FINISH-PTR USAGE POINTER.
+    05 END-STORAGE-PTR USAGE POINTER.
+PROCEDURE DIVISION USING BY VALUE INTERP, BY VALUE ARGS-PTR.
+    SET ADDRESS OF ARGS TO ARGS-PTR.
+    * Perform manual bit extraction or call C helper...
+    * GnuCOBOL allows mixing C and COBOL for high-performance math.
+    GOBACK.
+```
+**Compile:** `cobc -z -O3 -shared addon.cob -o libmy_addon.so`
+
+---
+
+### 🐱 LOLCODE
+I CAN HAS NATIVE ADDON? Using a C-transpiler or wrapper, you can write SP logic in **LOLCODE**.
+
+```lolcode
+HAI 1.2
+  CAN HAS STDIO?
+  I HAS A ARGS ITZ A POINTER
+  I HAS A V1 ITZ ARG 0
+  I HAS A V2 ITZ ARG 1
+  VISIBLE "CALCULATING SUM..."
+  I HAS A SUM ITZ SUM OF V1 AN V2
+  FOUND IT SUM
+KTHXBYE
+```
+**Link:** `gcc -shared -fPIC addon.c -llolcode -o libmy_addon.so`
+
+---
+
+### 💀 Brainfuck
+The ultimate systems programming language. Since Brainfuck is minimalist, it is usually hosted inside a small C wrapper that executes the code.
+
+```brainfuck
+[ SP Addon: add_numbers ]
+,>,[<+>-]<.
+```
+**Compile:** `gcc -shared -fPIC bf_wrapper.c -o libmy_addon.so`
+
+---
+
+### 🔱 Common Lisp
+**ECL (Embeddable Common Lisp)** allows you to compile Lisp into native machine code and export C symbols.
+
+```lisp
+(defun add-numbers (interp args)
+  (declare (type (pointer-to void) interp args))
+  (ffi:c-inline (interp args) (:pointer-void :pointer-void) :uint64_t
+    "/* Add logic here */"
+    :one-liner t))
+```
+**Compile:** `ecl -build-node shared-library -o libmy_addon.so addon.lisp`
 
 ---
 
