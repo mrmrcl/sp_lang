@@ -352,6 +352,215 @@ use { add_numbers } from "my_addon"
 console.show(add_numbers(10, 25)) // Outputs: 35
 ```
 
+### 🧙‍♂️ Cross-Language Addons
+While SP is written in C++, you can create native addons in any language that supports C linkage and can interface with SP's internal `Value` layout.
+
+#### ⚡ Zig Example
+Zig's memory-safe and low-level features make it an excellent choice for SP addons.
+
+```zig
+const std = @import("std");
+
+// SP uses NaN-boxing. A Value is a 64-bit integer.
+pub const Value = extern struct {
+    bits: u64,
+
+    pub fn isNumber(self: Value) bool {
+        return (self.bits & 0x7FF0000000000000) != 0x7FF0000000000000;
+    }
+
+    pub fn asNumber(self: Value) f64 {
+        return @bitCast(self.bits);
+    }
+};
+
+// Layout of std::vector<Value> (GCC/Clang standard)
+pub const StdVector = extern struct {
+    start: [*]Value,
+    finish: [*]Value,
+    end_of_storage: [*]Value,
+
+    pub fn len(self: *const StdVector) usize {
+        return (@intFromPtr(self.finish) - @intFromPtr(self.start)) / @sizeOf(Value);
+    }
+};
+
+export fn add_numbers(interp: ?*anyopaque, args: *const StdVector) u64 {
+    _ = interp;
+    if (args.len() < 2) return 0; // Return undefined bits or error
+    
+    const v1 = args.start[0];
+    const v2 = args.start[1];
+    
+    if (v1.isNumber() and v2.isNumber()) {
+        const res = v1.asNumber() + v2.asNumber();
+        return @bitCast(res);
+    }
+    return 0;
+}
+```
+**Compile:** `zig build-lib -dynamic addon.zig -femit-bin=libmy_addon.so`
+
+#### 🦀 Rust Example
+To use Rust, configure your project as a `cdylib` in your `Cargo.toml`.
+
+```rust
+#[repr(C)]
+pub struct Value { bits: u64 }
+
+impl Value {
+    pub fn is_number(&self) -> bool {
+        (self.bits & 0x7FF0000000000000) != 0x7FF0000000000000
+    }
+}
+
+#[repr(C)]
+pub struct StdVector {
+    start: *const Value,
+    finish: *const Value,
+    end_of_storage: *const Value,
+}
+
+impl StdVector {
+    pub fn len(&self) -> usize {
+        (self.finish as usize - self.start as usize) / 8
+    }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn add_numbers(_i: *mut (), args: *const StdVector) -> u64 {
+    let args = &*args;
+    if args.len() < 2 { return 0; }
+    
+    let v1 = &*args.start;
+    let v2 = &*args.start.add(1);
+    
+    if v1.is_number() && v2.is_number() {
+        let res = f64::from_bits(v1.bits) + f64::from_bits(v2.bits);
+        res.to_bits()
+    } else {
+        0
+    }
+}
+```
+**Cargo.toml:**
+```toml
+[lib]
+crate-type = ["cdylib"]
+name = "my_addon"
+```
+
+#### 🐹 Go Example
+Go can create SP addons using `cgo`. Note that you must use `main` package.
+
+```go
+package main
+
+/*
+#include <stdint.h>
+typedef struct { uint64_t bits; } Value;
+typedef struct { Value* s; Value* f; Value* e; } StdVector;
+*/
+import "C"
+import (
+	"unsafe"
+	"math"
+)
+
+//export add_numbers
+func add_numbers(interp unsafe.Pointer, args *C.StdVector) C.uint64_t {
+	count := (uintptr(unsafe.Pointer(args.f)) - uintptr(unsafe.Pointer(args.s))) / 8
+	if count < 2 { return 0 }
+
+	start := (*[1 << 30]C.Value)(unsafe.Pointer(args.s))[:count:count]
+    v1, v2 := uint64(start[0].bits), uint64(start[1].bits)
+    
+    isNum := func(b uint64) bool { return (b & 0x7FF0000000000000) != 0x7FF0000000000000 }
+    
+    if isNum(v1) && isNum(v2) {
+        res := math.Float64frombits(v1) + math.Float64frombits(v2)
+        return C.uint64_t(math.Float64bits(res))
+    }
+	return 0
+}
+
+func main() {}
+```
+**Compile:** `go build -o libmy_addon.so -buildmode=c-shared main.go`
+
+#### 🏺 Odin Example
+```odin
+package main
+
+import "core:math"
+
+Value :: struct { bits: u64 }
+StdVector :: struct { start, finish, end: ^Value }
+
+is_number :: proc(v: Value) -> bool {
+    return (v.bits & 0x7FF0000000000000) != 0x7FF0000000000000
+}
+
+@(export)
+add_numbers :: proc "c" (interp: rawptr, args: ^StdVector) -> u64 {
+    len := (int(uintptr(args.finish)) - int(uintptr(args.start))) / size_of(Value)
+    if len < 2 do return 0
+
+    v1 := args.start[0]
+    v2 := args.start[1]
+
+    if is_number(v1) && is_number(v2) {
+        res := transmute(f64)v1.bits + transmute(f64)v2.bits
+        return transmute(u64)res
+    }
+    return 0
+}
+```
+**Compile:** `odin build addon.odin -build-mode:shared -out:libmy_addon.so`
+
+### ⚡ Optimization: Minimal C Header
+To simplify addon development in non-C++ languages, you can use our minimal C99-compatible header: [**`sp_addon.h`**](./include/sp_addon.h).
+
+This header defines the `sp_value` and `sp_args` (vector layout) types, along with helper macros. This means you do not need to parse the full C++ `types.h` and can instead work with pure C structures.
+
+```c
+#include "sp_addon.h"
+
+// Example usage in C
+uint64_t add_numbers(void* i, const sp_args* args) {
+    if (SP_ARGS_LEN(args) < 2) return 0;
+    
+    sp_value v1 = SP_GET_ARG(args, 0);
+    sp_value v2 = SP_GET_ARG(args, 1);
+    
+    if (SP_IS_NUMBER(v1) && SP_IS_NUMBER(v2)) {
+        double res = SP_AS_NUMBER(v1) + SP_AS_NUMBER(v2);
+        return SP_MAKE_NUMBER(res).bits;
+    }
+    return 0;
+}
+```
+
+### 🛠️ Compiling & Linking Addons
+When compiling your addon, there are a few critical requirements:
+
+1.  **Shared Library**: The output MUST be a shared object (`.so`).
+2.  **Position Independent Code**: You must use `-fPIC` (C/C++) or equivalent options.
+3.  **No Linking Required**: Because the SP interpreter is self-contained, your addon **does not need to link against the SP binary** at compile-time. Symbols are resolved dynamically when the addon is loaded.
+
+#### Unified Compilation Commands
+
+| Language | Command |
+| :--- | :--- |
+| **C / C++** | `g++ -O3 -shared -fPIC addon.cpp -Iinclude -o libmy_addon.so` |
+| **Zig** | `zig build-lib -dynamic addon.zig -femit-bin=libmy_addon.so` |
+| **Rust** | `cargo build --release` (with `cdylib` in `Cargo.toml`) |
+| **Go** | `go build -o libmy_addon.so -buildmode=c-shared main.go` |
+| **Odin** | `odin build addon.odin -build-mode:shared -out:libmy_addon.so` |
+
+> [!TIP]
+> Always ensure your shared object starts with the `lib` prefix (e.g., `libmath.so`) to be correctly discovered by the `use` statement in SP.
+
 
 ---
 
