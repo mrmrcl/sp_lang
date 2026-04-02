@@ -23,7 +23,21 @@ Arguments are passed as a reference to a C++ `std::vector<Value>`. In most moder
 
 ## ⚡ Language Examples
 
-````carousel
+The following examples demonstrate how to implement a basic `add_numbers` function in various languages. Since SP uses a stable C-style ABI, you can use any language that can export C symbols.
+
+### 📑 Table of Contents
+- [⚡ Zig](#-zig)
+- [🦀 Rust](#-rust)
+- [🐹 Go](#-go)
+- [🏺 Odin](#-odin)
+- [👑 Nim](#-nim)
+- [💎 Crystal](#-crystal)
+- [🍎 Swift](#-swift)
+- [🐉 D](#-d)
+- [👴 FreePascal](#-freepascal)
+
+---
+
 ### ⚡ Zig
 Zig's memory-safe and low-level features make it an excellent choice for SP addons.
 
@@ -51,7 +65,9 @@ export fn add_numbers(interp: ?*anyopaque, args: *const StdVector) u64 {
 }
 ```
 **Compile:** `zig build-lib -dynamic addon.zig -femit-bin=libmy_addon.so`
-<!-- slide -->
+
+---
+
 ### 🦀 Rust
 Rust is powerful and safe. Use `cdylib` and `#[no_mangle]`.
 
@@ -73,7 +89,9 @@ pub unsafe extern "C" fn add_numbers(_i: *mut (), args: *const StdVector) -> u64
 }
 ```
 **Compile:** `cargo build --release`
-<!-- slide -->
+
+---
+
 ### 🐹 Go
 Go can create addons using `cgo`.
 
@@ -94,7 +112,9 @@ func add_numbers(interp unsafe.Pointer, args *C.StdVector) C.uint64_t {
 }
 ```
 **Compile:** `go build -o libmy_addon.so -buildmode=c-shared main.go`
-<!-- slide -->
+
+---
+
 ### 🏺 Odin
 Odin's simple FFI makes it a great fit.
 
@@ -110,7 +130,9 @@ add_numbers :: proc "c" (interp: rawptr, args: ^StdVector) -> u64 {
 }
 ```
 **Compile:** `odin build addon.odin -build-mode:shared -out:libmy_addon.so`
-<!-- slide -->
+
+---
+
 ### 👑 Nim
 Nim is incredibly flexible and compiles to C.
 
@@ -125,7 +147,9 @@ proc add_numbers(interp: pointer, args: ptr StdVector): uint64 {.exportc, dynlib
   # ...
 ```
 **Compile:** `nim c --app:lib -d:release addon.nim`
-<!-- slide -->
+
+---
+
 ### 💎 Crystal
 Crystal is fast and Ruby-like.
 
@@ -140,7 +164,9 @@ fun add_numbers(interp : Void*, args : SP::StdVector*) : UInt64
 end
 ```
 **Compile:** `crystal build --shared addon.cr`
-<!-- slide -->
+
+---
+
 ### 🍎 Swift
 Swift's `@_cdecl` makes it easy to export symbols.
 
@@ -154,7 +180,9 @@ public func add_numbers(interp: UnsafeMutableRawPointer?, args: UnsafePointer<St
 }
 ```
 **Compile:** `swiftc -emit-library -o libmy_addon.so addon.swift`
-<!-- slide -->
+
+---
+
 ### 🐉 D
 D's `extern(C)` provides first-class interop.
 
@@ -169,7 +197,9 @@ extern(C) ulong add_numbers(void* interp, StdVector* args) {
 }
 ```
 **Compile:** `ldc2 -shared addon.d -of=libmy_addon.so`
-<!-- slide -->
+
+---
+
 ### 👴 FreePascal
 Classic, fast, and simple.
 
@@ -186,7 +216,6 @@ begin
 end;
 ```
 **Compile:** `fpc -Mdelphi -Tlinux -Pauto -Wl-shared addon.pas`
-````
 
 ---
 
