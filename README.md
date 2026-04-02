@@ -12,35 +12,11 @@ Download the `sp` executable from this repository. Ensure it has execution permi
 chmod +x sp
 ```
 
-## 🛠️ IDE Support
-
+### 2. Install the VS Code Extension
 For the best experience, use the **[SP VS Code Extension](./sp-language-vscode-0.1.4.vsix)**. It provides:
 - Syntax highlighting
 - Hover information for built-ins and types
 - Diagnostic error reporting
-
----
-
-## 🤝 Community & Support
-
-- **Discord**: Join the community and find me as **SwyftPain**.
-- **Email**: Reach out to **nikolamatic225@gmail.com** for professional inquiries.
-- **Contributing**: Check our **[CONTRIBUTING.md](.github/CONTRIBUTING.md)** for details on how to get involved.
-- **Issues**: Report bugs or request features using our dedicated **[templates](.github/ISSUE_TEMPLATE/)**.
-
-## 💖 Sponsorship
-
-If you find SP useful and would like to support its development, you can sponsor me via **[PayPal](https://paypal.me/mrjohnnyjo)**. Your support helps keep the project alive and growing!
-
----
-
-## 📜 License
-
-SP is released under the MIT License. See `LICENSE` for details.
-
----
-
-Crafted with 💖 by **SwyftPain**
 
 ### 3. Run Your First Script
 Create a file named `hello.sp`:
@@ -71,22 +47,36 @@ For a comprehensive guide on the language syntax, built-in modules, and advanced
 
 ---
 
-## 🤝 Contributing
+## 🗺️ Roadmap (Upcoming Features)
 
-We love contributions! Whether it's reporting a bug, suggesting a feature, or submitting a PR, your help is welcome.
+SP is actively evolving! Here are some of the key features planned for the near future:
 
-Read our **[Contributing Guide](./.github/CONTRIBUTING.md)** to get started.
-
-## 🏛️ Community & Support
-
-- **Discord**: Connect with the community (Looking for **SwyftPain**).
-- **Issues**: Report problems through the **[Bug Report Form](https://github.com/mrmrcl/sp_lang/issues/new?template=bug_report.yml)**.
-- **Direct Support**: Check the **[Support Guide](./SUPPORT.md)** for more options.
-
-## 💖 Support the Project
-
-If you find SP useful and want to support its development, you can **[Sponsor](https://github.com/mrmrcl/sp_lang/sponsors)** this repository or **[Donate via PayPal](https://paypal.me/mrjohnnyjo)**.
+- **Optional Strict Types**: TypeScript-like typing with support for grouped types for better type safety.
+- **Asynchronous Programming**: Native `async`/`await` support for non-blocking operations (**Syntax TBD**).
+- **Networking/HTTP**: Built-in `http` and `net` modules to enable web and network capabilities (**Syntax TBD**).
+- **Enhanced Error Handling**: Improved `try`/`catch` or domain-specific error catching mechanisms (**Syntax TBD**).
+- **Granular Security**: A dedicated permission system for file system and network access (**Execution TBD**).
 
 ---
 
-Happy Coding with **SP**!
+## 🤝 Community & Support
+
+- **Discord**: Join the community and find me as **SwyftPain**.
+- **Email**: Reach out to **nikolamatic225@gmail.com** for professional inquiries.
+- **Contributing**: Check our **[CONTRIBUTING.md](.github/CONTRIBUTING.md)** for details on how to get involved.
+- **Issues**: Report bugs or request features using our dedicated **[templates](.github/ISSUE_TEMPLATE/)**.
+- **Direct Support**: Check the **[Support Guide](./SUPPORT.md)** for more options.
+
+## 💖 Sponsorship
+
+If you find SP useful and would like to support its development, you can sponsor me via **[PayPal](https://paypal.me/mrjohnnyjo)**. Your support helps keep the project alive and growing!
+
+---
+
+## 📜 License
+
+SP is released under the MIT License. See `LICENSE` for details.
+
+---
+
+Crafted with 💖 by **SwyftPain**
