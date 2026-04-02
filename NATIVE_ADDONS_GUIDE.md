@@ -35,6 +35,14 @@ The following examples demonstrate how to implement a basic `add_numbers` functi
 - [🍎 Swift](#-swift)
 - [🐉 D](#-d)
 - [👴 FreePascal](#-freepascal)
+- [🐍 Python](#-python)
+- [♯ C#](#-c)
+- [☕ Java](#-java)
+- [🟣 Julia](#-julia)
+- [📜 JavaScript](#-javascript)
+- [🎯 Kotlin](#-kotlin)
+- [λ Haskell](#-haskell)
+- [🔢 Fortran](#-fortran)
 
 ---
 
@@ -217,7 +225,140 @@ end;
 ```
 **Compile:** `fpc -Mdelphi -Tlinux -Pauto -Wl-shared addon.pas`
 
+
+### 🐍 Python
+Python can be used via **Cython** to generate a native shared library that exports C symbols.
+
+```python
+# addon.pyx
+from libc.stdint cimport uint64_t
+
+# Export the function to C
+cdef public uint64_t add_numbers(void* interp, void* args):
+    # Logic goes here
+    return 0
+```
+**Compile:** `cython addon.pyx && gcc -shared -o libmy_addon.so addon.c $(python3-config --includes --ldflags) -fPIC`
+
 ---
+
+### ♯ C#
+Modern C# supports **NativeAOT**, allowing you to compile your code into a standalone native shared library.
+
+```csharp
+using System.Runtime.InteropServices;
+
+public class SPAddon {
+    [UnmanagedCallersOnly(EntryPoint = "add_numbers")]
+    public static ulong AddNumbers(IntPtr interp, IntPtr args) {
+        // C# logic here
+        return 0;
+    }
+}
+```
+**Compile:** `dotnet publish -c Release -r linux-x64 /p:NativeLib=Shared`
+
+---
+
+### ☕ Java
+Using **GraalVM Native Image**, you can compile Java code into a native shared library with C-style exports.
+
+```java
+import org.graalvm.nativeimage.IsolateThread;
+import org.graalvm.nativeimage.c.function.CEntryPoint;
+
+public class SPAddon {
+    @CEntryPoint(name = "add_numbers")
+    public static long addNumbers(IsolateThread thread, long interp, long args) {
+        return 0;
+    }
+}
+```
+**Compile:** `native-image --shared -H:Name=libmy_addon`
+
+---
+
+### 🟣 Julia
+Julia's `PackageCompiler.jl` can generate native shared libraries for FFI.
+
+```julia
+module MyAddon
+    Base.@ccallable function add_numbers(interp::Ptr{Cvoid}, args::Ptr{Cvoid})::UInt64
+        return 0
+    end
+end
+```
+**Compile:** `using PackageCompiler; create_library(".", "libmy_addon", lib_name="my_addon")`
+
+---
+
+### 📜 JavaScript
+To use JavaScript, you can embed a tiny engine like **QuickJS** inside a C wrapper.
+
+```c
+#include "quickjs.h"
+#include "sp_addon.h"
+
+uint64_t add_numbers(void* interp, const sp_args* args) {
+    JSRuntime *rt = JS_NewRuntime();
+    JSContext *ctx = JS_NewContext(rt);
+    // Execute JS logic...
+    JS_FreeContext(ctx);
+    JS_FreeRuntime(rt);
+    return 0;
+}
+```
+**Compile:** `gcc -shared -fPIC addon.c -lquickjs -o libmy_addon.so`
+
+---
+
+### 🎯 Kotlin
+**Kotlin/Native** is designed for high-performance native binaries and easy C interop.
+
+```kotlin
+@CName("add_numbers")
+fun add_numbers(interp: COpaquePointer?, args: COpaquePointer?): Long {
+    return 0
+}
+```
+**Compile:** `kotlinc-native addon.kt -produce library -o libmy_addon`
+
+---
+
+### λ Haskell
+Haskell can export functions to C using the Foreign Function Interface (FFI).
+
+```haskell
+{-# LANGUAGE ForeignFunctionInterface #-}
+module Addon where
+import Foreign.Ptr
+import Data.Word
+
+foreign export ccall add_numbers :: Ptr () -> Ptr () -> IO Word64
+
+add_numbers :: Ptr () -> Ptr () -> IO Word64
+add_numbers _ _ = return 0
+```
+**Compile:** `ghc -shared -dynamic -fPIC addon.hs -o libmy_addon.so`
+
+---
+
+### 🔢 Fortran
+Modern Fortran's `iso_c_binding` makes it trivial to export C-compatible functions.
+
+```fortran
+function add_numbers(interp, args) bind(c, name="add_numbers")
+    use iso_c_binding
+    implicit none
+    integer(c_int64_t) :: add_numbers
+    type(c_ptr), value :: interp, args
+    add_numbers = 0
+end function
+```
+**Compile:** `gfortran -shared -fPIC addon.f90 -o libmy_addon.so`
+
+---
+
 
 ### 🛠️ Compiling & Linking Addons
 When compiling your addon, there are a few critical requirements:

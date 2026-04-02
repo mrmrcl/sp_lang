@@ -401,6 +401,14 @@ When compiling your addon, there are a few critical requirements:
 | **Swift** | `swiftc -emit-library -o libmy_addon.so addon.swift` |
 | **D** | `ldc2 -shared addon.d -of=libmy_addon.so` |
 | **FreePascal** | `fpc -Mdelphi -Tlinux -Pauto -Wl-shared addon.pas` |
+| **Python** | `cython addon.pyx && gcc -shared -o libmy_addon.so addon.c $(python3-config --includes --ldflags) -fPIC` |
+| **C#** | `dotnet publish -c Release -r linux-x64 /p:NativeLib=Shared` |
+| **Java** | `native-image --shared -H:Name=libmy_addon` |
+| **Julia** | `using PackageCompiler; create_library(...)` |
+| **JavaScript** | `gcc -shared -fPIC addon.c -lquickjs -o libmy_addon.so` |
+| **Kotlin** | `kotlinc-native addon.kt -produce library -o libmy_addon` |
+| **Haskell** | `ghc -shared -dynamic -fPIC addon.hs -o libmy_addon.so` |
+| **Fortran** | `gfortran -shared -fPIC addon.f90 -o libmy_addon.so` |
 
 > [!TIP]
 > Always ensure your shared object starts with the `lib` prefix (e.g., `libmath.so`) to be correctly discovered by the `use` statement in SP.
