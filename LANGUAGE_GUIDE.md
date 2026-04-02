@@ -13,15 +13,16 @@ Welcome to the **SP Programming Language**! SP is a modern, strongly-typed, and 
 6. [The Pipeline Operator (`|>`)](#the-pipeline-operator)
 7. [Standard Library](#standard-library)
 8. [Object-Oriented Programming (Classes)](#object-oriented-programming)
+9. [IDE Support (VS Code)](#ide-support)
 
 ---
 
 ## Getting Started
 
-To run an SP script, use the `sp_interpreter` executable:
+To run an SP script, use the `sp` executable included in this repository:
 
 ```bash
-./sp_interpreter hello.sp
+./sp hello.sp
 ```
 
 ### Your First Script: Hello World
@@ -30,6 +31,26 @@ Create a file named `hello.sp` and add the following:
 ```sp
 console.show("Hello, World!")
 ```
+
+---
+
+## IDE Support
+
+For the best development experience, we recommend using the **SP Language** extension for **Visual Studio Code**.
+
+### Features
+- **Syntax Highlighting**: Beautiful coloring for the modern SP syntax.
+- **IntelliSense**: Auto-completion for variables, functions, and object properties (including nested ones like `obj.a.b`).
+- **Hover Information**: Instant documentation and type inference when hovering over identifiers.
+- **Diagnostics**: Real-time error reporting for syntax and simple type mismatches.
+
+### Installation
+1.  Download the `sp-language-vscode-0.1.4.vsix` file from the repository.
+2.  Install it via the VS Code extensions menu or the command line:
+    ```bash
+    code --install-extension sp-language-vscode-0.1.4.vsix
+    ```
+
 
 ---
 
