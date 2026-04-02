@@ -197,6 +197,42 @@ console.show(floor(10.7)) // Outputs: 10
 console.show(floor(5.2))  // Outputs: 5
 ```
 
+### ⚙️ `process`
+Execute system commands and manage external processes.
+
+| Method | Description |
+| :--- | :--- |
+| `process.run(cmd, args)` | Executes a command, waits for it to finish, and returns the exit code. |
+| `process.spawn(cmd, args)` | Starts a command as a background process. |
+
+```sp
+// Example: List files in current directory
+process.run("ls", ["-la"])
+```
+
+### 🗺️ `Map` (HashMap)
+SP provides a `Map` structure for high-performance key-value storage.
+
+```sp
+set scores = Map()
+scores.set("Alice", 100)
+scores.set("Bob", 85)
+
+console.show(scores.get("Alice")) // 100
+console.show(scores.has("Charlie")) // false
+```
+
+### 📅 `Date`
+Interact with system time and timestamps.
+
+```sp
+set now = Date.now()
+console.show("Current timestamp: {now}")
+
+set info = fs.info("hello.sp")
+console.show("File created at: {info.createdAt}")
+```
+
 ---
 
 ## 🏛️ Object-Oriented Programming
