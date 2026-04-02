@@ -208,6 +208,8 @@ For a module called `"my_addon"`, SP searches for a file named **`libmy_addon.so
 3.  **System Paths** (Standard library locations)
 
 ### 2. Write the C++ Code (`my_func.cpp`)
+To compile against the SP API, you must include **`types.h`**. These and other required headers are provided in the **`include/`** directory of this repository for development.
+
 ```cpp
 #include "types.h"
 #include <vector>
@@ -220,9 +222,11 @@ extern "C" {
 ```
 
 ### 3. Compile to Shared Object
+Ensure you include the **`include/`** directory in your compiler's search path using **`-Iinclude`**:
 ```bash
-g++ -O3 -shared -fPIC my_func.cpp -o libmy_addon.so
+g++ -O3 -shared -fPIC my_func.cpp -Iinclude -o libmy_addon.so
 ```
+
 
 ### 4. Use in SP
 ```sp
