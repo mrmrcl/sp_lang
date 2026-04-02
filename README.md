@@ -1,6 +1,6 @@
 # SP Programming Language
 
-A modern, strongly-typed, and expressive language designed for performance and simplicity. SP features a self-contained compiler and virtual machine, accessible through a single standalone executable.
+A modern and expressive language designed for performance and simplicity. SP features a self-contained compiler and virtual machine, accessible through a single standalone executable.
 
 ---
 
@@ -29,9 +29,9 @@ Run it:
 
 ---
 
-## 📘 Documentation
-
-For a comprehensive guide on the language syntax, built-in modules, and advanced features like the **Pipeline Operator** and **Classes**, check out our **[Language Guide](file:///home/swyft/Documents/term/sp_language/LANGUAGE_GUIDE.md)**.
+For more technical details, check out:
+- 📘 **[Language Guide](LANGUAGE_GUIDE.md)**: Syntax, built-in modules, and core features.
+- 🧩 **[Native Addons Guide](NATIVE_ADDONS_GUIDE.md)**: Building high-performance extensions in C++, Zig, Rust, and more.
 
 ## ✨ Features at a Glance
 

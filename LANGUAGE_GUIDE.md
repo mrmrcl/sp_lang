@@ -1,6 +1,6 @@
 # SP Language Guide
 
-Welcome to the **SP Programming Language**! SP is a modern, strongly-typed, and expressive language designed for simplicity and performance. Whether you are a beginner or an experienced developer, this guide will help you get started.
+Welcome to the **SP Programming Language**! SP is a modern and expressive language designed for simplicity and performance. Whether you are a beginner or an experienced developer, this guide will help you get started.
 
 ---
 
