@@ -208,32 +208,41 @@ For a module called `"my_addon"`, SP searches for a file named **`libmy_addon.so
 3.  **System Paths** (Standard library locations)
 
 ### 2. Write the C++ Code (`my_func.cpp`)
-To compile against the SP API, you must include **`types.h`**. These and other required headers are provided in the **`include/`** directory of this repository for development.
+All arguments passed from SP are accessible in the `std::vector<Value>& args` parameter.
 
 ```cpp
 #include "types.h"
 #include <vector>
+#include <stdexcept>
 
 extern "C" {
-    uint64_t my_native_func(Interpreter& interp, const std::vector<Value>& args) {
-        return Value(42.0).bits; // Always return Value.bits
+    uint64_t add_numbers(Interpreter& interp, const std::vector<Value>& args) {
+        if (args.size() < 2) {
+            throw std::runtime_error("add_numbers expects 2 arguments");
+        }
+        if (!args[0].isNumber() || !args[1].isNumber()) {
+            throw std::runtime_error("add_numbers expects numeric arguments");
+        }
+        
+        double result = args[0].asNumber() + args[1].asNumber();
+        return Value(result).bits; // Always return Value.bits
     }
 }
 ```
 
 ### 3. Compile to Shared Object
-Ensure you include the **`include/`** directory in your compiler's search path using **`-Iinclude`**:
 ```bash
 g++ -O3 -shared -fPIC my_func.cpp -Iinclude -o libmy_addon.so
 ```
 
-
 ### 4. Use in SP
 ```sp
 // SP will search for libmy_addon.so in ./ or ./modules/
-use { my_native_func } from "my_addon"
-console.show(my_native_func()) // 42
+use { add_numbers } from "my_addon"
+
+console.show(add_numbers(10, 25)) // Outputs: 35
 ```
+
 
 ---
 
