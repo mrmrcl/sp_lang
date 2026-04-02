@@ -56,6 +56,12 @@ SP supports modern destructuring for objects and arrays.
 set [first, second, ...rest] = [10, 20, 30, 40]
 console.show(first) // 10
 console.show(rest)  // [30, 40]
+
+// Nested Destructuring
+set [a, [b, c]] = [1, [2, 3]]
+set personMap = { info: { id: 101 } }
+set { info: { id } } = personMap
+console.show(id) // 101
 ```
 
 **Object Destructuring**:
@@ -73,6 +79,14 @@ set arr2 = [0, ...arr1, 3] // [0, 1, 2, 3]
 
 set obj1 = { a: 1 }
 set obj2 = { ...obj1, b: 2 } // { a: 1, b: 2 }
+
+### BigInts
+For working with arbitrary-precision integers, use the `n` suffix.
+```sp
+set big = 1000000000000000000n
+set small = 10n
+console.show(big + small) // 1000000000000000010n
+```
 ```
 
 ---
@@ -110,6 +124,16 @@ define sumAll = (...args) => {
     for n in args { total = total + n }
     return total
 }
+
+### Implicit Returns
+Functions in SP return the value of the last expression in their block if no `return` is used.
+```sp
+define multiply = (a, b) => a * b // Implicitly returns a * b
+
+define check = (x) => {
+    if x > 10 { "Big" } else { "Small" } // Implicitly returns branch value
+}
+```
 ```
 
 ### Callbacks (Higher-Order Functions)
@@ -220,6 +244,23 @@ scores.set("Bob", 85)
 
 console.show(scores.get("Alice")) // 100
 console.show(scores.has("Charlie")) // false
+
+// Size property
+console.show("Count: {scores.size}")
+
+// Advanced methods
+scores.delete("Bob")
+scores.keys()   // ["Alice"]
+scores.values() // [100]
+scores.clear()  // Empty the map
+
+// forEach callback (key, value)
+scores.set("X", 1).set("Y", 2).forEach((k, v) => {
+    console.show("{k} = {v}")
+})
+```
+
+Mention: `HashMap` is a valid alias for `Map`.
 ```
 
 ### 📅 `Date`
@@ -228,6 +269,12 @@ Interact with system time and timestamps.
 ```sp
 set now = Date.now()
 console.show("Current timestamp: {now}")
+
+// Date Properties
+console.show("Year: {now.year}")
+console.show("Month: {now.month}")
+console.show("Day: {now.day}")
+console.show("Time: {now.hour}:{now.minute}:{now.second}")
 
 set info = fs.info("hello.sp")
 console.show("File created at: {info.createdAt}")
@@ -245,6 +292,12 @@ class Robot {
     define init = (id) => this.id = id
     define charge = () => console.show("Robot {this.id} charged.")
 }
+
+### Access Modifiers
+SP supports several property and class modifiers for better encapsulation:
+- **`readonly`**: Value can only be set during initialization.
+- **`private`**: Only accessible within the class itself.
+- **`abstract class`**: A base class that cannot be instantiated directly.
 
 set bot = Robot("SP-1")
 bot.charge()
