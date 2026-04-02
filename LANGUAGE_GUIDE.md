@@ -23,11 +23,22 @@ console.show("Hello, SP!")
 
 ---
 
-## 📘 IDE Support
+## 📘 IDE Support & Documentation
 
 For the best experience, use our **[Visual Studio Code extension](./sp-language-vscode-0.1.4.vsix)**.
-- **Features**: Syntax highlighting, Diagnostics, Hover Info, and IntelliSense.
-- **Install**: `code --install-extension sp-language-vscode-0.1.4.vsix`
+
+### Doc-Comments
+SP supports JSDoc-style comments that provide instant IntelliSense and Type Inference in VS Code.
+```sp
+/**
+ * Adds two numbers.
+ * @param {number} a
+ * @param {number} b
+ * @return {number} The sum
+ */
+define add = (a, b) => a + b
+```
+*Hovering over `add` in VS Code will now show this documentation.*
 
 ---
 
@@ -37,27 +48,32 @@ For the best experience, use our **[Visual Studio Code extension](./sp-language-
 - **`set`**: Immutable (constant).
 - **`var`**: Mutable (can be reassigned).
 
+### Destructuring & Spread
+SP supports modern destructuring for objects and arrays.
+
+**Array Destructuring**:
 ```sp
-set pi = 3.14159          // Constant
-var score = 100           // Variable
-score = 105               // Re-assignment
+set [first, second, ...rest] = [10, 20, 30, 40]
+console.show(first) // 10
+console.show(rest)  // [30, 40]
 ```
 
-### Data Types
-- **Numbers & BigInts**: `42`, `3.14`, `1000000000n`.
-- **Strings**: Supports interpolation with `{ }`.
-    ```sp
-    set user = "Alice"
-    console.show("Welcome, {user}!") 
-    ```
-- **Arrays**: `[1, 2, 3]`. Supports `.length`.
-- **Objects**: `{key: "value"}`. Access properties with dot `.`.
-- **Map / HashMap**: Built-in for efficient key-value storage.
-    ```sp
-    set store = Map()
-    store.set("apples", 10)
-    console.show(store.get("apples")) // 10
-    ```
+**Object Destructuring**:
+```sp
+set person = { name: "Alice", age: 30 }
+set { name, age: years } = person
+console.show(name)  // "Alice"
+console.show(years) // 30
+```
+
+**Spread Operator (`...`)**:
+```sp
+set arr1 = [1, 2]
+set arr2 = [0, ...arr1, 3] // [0, 1, 2, 3]
+
+set obj1 = { a: 1 }
+set obj2 = { ...obj1, b: 2 } // { a: 1, b: 2 }
+```
 
 ---
 
@@ -82,113 +98,91 @@ set result = match score {
 ### Loops
 - **`while condition { ... }`**: Standard loop.
 - **`for item in collection { ... }`**: Iterates over arrays.
+
+---
+
+## 🎯 Functions & Callbacks
+
+### Named Functions & Rest Params
 ```sp
-for name in ["Alice", "Bob"] {
-    console.show("Hi, {name}")
+define sumAll = (...args) => {
+    var total = 0
+    for n in args { total = total + n }
+    return total
 }
+```
+
+### Callbacks (Higher-Order Functions)
+Functions are first-class citizens. You can pass them as arguments.
+```sp
+define processList = (list, callback) => {
+    for item in list { callback(item) }
+}
+
+processList([1, 2, 3], (x) => console.show("Processing: {x}"))
+```
+
+### Pipeline Operator (`|>`)
+Chain function calls from left to right. Use `_` as a placeholder.
+```sp
+10 |> ((n) => n * 2) |> console.show(_) // 20
 ```
 
 ---
 
-## 🎯 Functions & Closures
+## 📦 Modules & Imports
 
-### Named Functions
+### Named Imports & Aliasing
 ```sp
-define add = (a, b) => a + b
-```
+// Standard Import
+use math
 
-### Pipeline Operator (`|>`)
-Chain function calls from left to right. Use `_` as a placeholder for the piped value.
-```sp
-define double = (n) => n * 2
-10 |> double |> console.show(_) // Outputs: 20
+// Named Import with Aliasing
+use { add as plus, mul } from math
+
+// Module Aliasing
+use math as m
+console.show(m.add(1, 2))
 ```
 
 ---
 
 ## 📦 Standard Library
 
-### 📁 `fs` (File System)
-The `fs` module handles all file operations.
-
+### 📁 `fs` (File System) & JSON
 | Method | Description |
 | :--- | :--- |
 | `fs.read(path)` | Returns file content as a string or `null`. |
-| `fs.write(path, data)` | Overwrites a file with the provided data. |
-| `fs.append(path, data)` | Appends data to an existing file. |
-| `fs.delete(path)` | Deletes a file. |
-| `fs.readJson(path)` | Reads and parses a JSON file into an SP object. |
-| `fs.writeJson(path, obj)` | Serializes an SP object to JSON and writes to disk. |
+| `fs.write(path, data)` | Overwrites a file. |
+| `fs.readJson(path)` | Reads and parses JSON into an SP object. |
+| `fs.writeJson(path, obj)` | Serializes and writes JSON. |
+| `fs.info(path)` | Returns detailed object (path, size, exists, etc.). |
 
-#### `fs.info(path)`
-Returns a detailed object for a file:
+### 💻 `console` & Benchmarking
+| Method | Description |
+| :--- | :--- |
+| `console.args()` | Returns an **Array** of CLI arguments. |
+| `time()` | Returns current timestamp in **milliseconds**. |
+| `floor(n)` | Returns the floor of a number. |
+
+**Benchmark Example**:
 ```sp
-set info = fs.info("data.txt")
-console.show("Size:", info.size)        // Bytes
-console.show("Extension:", info.ext)    // e.g. ".txt"
-console.show("Modified:", info.modifiedAt) // Date object
+set start = time()
+// ... do work ...
+console.show("Took: {time() - start}ms")
 ```
-**Return Object Details**:
-- `path` (string): Absolute path.
-- `dirname` (string): Parent directory.
-- `name` (string): Filename with extension.
-- `ext` (string): Extension (includes `.`).
-- `size` (number): File size in bytes.
-- `exists` (boolean): Whether the file exists.
-- `modifiedAt` (Date): Last modification time.
-- `createdAt` (Date): Creation time.
-
-### 💻 `console`
-| Method | Description |
-| :--- | :--- |
-| `console.show(...)` | Prints values to stdout with a newline. |
-| `console.warn(...)` | Prints values to stderr in yellow. |
-| `console.read()` | Reads a line from the user's input. |
-| `console.args()` | Returns an **Array** of CLI arguments passed to the script. |
-
-### 🛠️ `process`
-| Method | Description |
-| :--- | :--- |
-| `process.run(cmd, args)` | Sync: Runs command and returns exit code. |
-| `process.spawn(cmd, args)`| Async: Starts a background process. |
-
-### 🗺️ `Map` / `HashMap`
-| Method | Description |
-| :--- | :--- |
-| `set(key, val)` | Stores a value. Returns Map (for chaining). |
-| `get(key)` | Retrieves a value or `null`. |
-| `has(key)` | Returns `true` if the key exists. |
-| `delete(key)` | Removes an entry. |
-| `clear()` | Removes all entries. |
-| `keys()` | Returns an **Array** of all keys. |
-| `values()` | Returns an **Array** of all values. |
-| `forEach(fn)` | Calls `fn(key, value)` for each entry. |
-
-### 🕒 `Date`
-Created with `Date.now()`. Properties:
-- `year`, `month` (1-12), `day`.
-- `hour`, `minute`, `second`.
-- `toString()`: Formats as "YYYY-MM-DD HH:MM:S".
 
 ---
 
 ## 🏛️ Object-Oriented Programming
-
-Define templates for reusable objects using `class`.
 
 ```sp
 class Robot {
     readonly id
     var power = 100
 
-    define init = (id) => {
-        this.id = id
-    }
-
-    define charge = () => {
-        this.power = 100
-        console.show("Robot {this.id} charged.")
-    }
+    define init = (id) => this.id = id
+    define charge = () => console.show("Robot {this.id} charged.")
 }
 
 set bot = Robot("SP-1")
@@ -197,4 +191,34 @@ bot.charge()
 
 ---
 
-Happy Coding with **SP**! 
+## 🧙‍♂️ Advanced: Native Addons (C++ Integration)
+
+SP allows you to load native C++ shared objects (`.so`) as modules.
+
+### 1. Write the C++ Code (`addon.cpp`)
+```cpp
+#include "types.h"
+#include <vector>
+
+extern "C" {
+    uint64_t my_native_func(Interpreter& interp, const std::vector<Value>& args) {
+        // args[0] is the first argument from SP
+        return Value(42.0).bits; // Always return Value.bits
+    }
+}
+```
+
+### 2. Compile to Shared Object
+```bash
+g++ -O3 -shared -fPIC addon.cpp -o my_addon.so
+```
+
+### 3. Use in SP
+```sp
+use { my_native_func } from "my_addon"
+console.show(my_native_func()) // 42
+```
+
+---
+
+Happy Coding with **SP**!
