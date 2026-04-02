@@ -12,14 +12,35 @@ Download the `sp` executable from this repository. Ensure it has execution permi
 chmod +x sp
 ```
 
-### 2. Install the VS Code Extension (Recommended)
-Enhance your development experience with the official SP extension for VS Code:
-1.  Download the `sp-language-vscode-0.1.4.vsix` file from this repository.
-2.  Install it via terminal:
-    ```bash
-    code --install-extension sp-language-vscode-0.1.4.vsix
-    ```
-    *Or, in VS Code, go to the Extensions view, click `...` (top-right), and select `Install from VSIX...`.*
+## 🛠️ IDE Support
+
+For the best experience, use the **[SP VS Code Extension](./sp-language-vscode-0.1.4.vsix)**. It provides:
+- Syntax highlighting
+- Hover information for built-ins and types
+- Diagnostic error reporting
+
+---
+
+## 🤝 Community & Support
+
+- **Discord**: Join the community and find me as **SwyftPain**.
+- **Email**: Reach out to **nikolamatic225@gmail.com** for professional inquiries.
+- **Contributing**: Check our **[CONTRIBUTING.md](.github/CONTRIBUTING.md)** for details on how to get involved.
+- **Issues**: Report bugs or request features using our dedicated **[templates](.github/ISSUE_TEMPLATE/)**.
+
+## 💖 Sponsorship
+
+If you find SP useful and would like to support its development, you can sponsor me via **[PayPal](https://paypal.me/mrjohnnyjo)**. Your support helps keep the project alive and growing!
+
+---
+
+## 📜 License
+
+SP is released under the MIT License. See `LICENSE` for details.
+
+---
+
+Crafted with 💖 by **SwyftPain**
 
 ### 3. Run Your First Script
 Create a file named `hello.sp`:
