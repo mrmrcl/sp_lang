@@ -2,6 +2,47 @@
 
 Welcome to the **SP Programming Language**! SP is a modern, strongly-typed, and expressive language designed for performance and simplicity. It features a self-contained compiler and virtual machine, accessible through a single, statically-linked standalone executable.
 
+## 📖 Table of Contents
+- [🚀 Getting Started](#-getting-started)
+  - [1. Download & Prepare](#1-download--prepare)
+  - [2. Run Your First Script](#2-run-your-first-script)
+- [📘 IDE Support & Documentation](#-ide-support--documentation)
+  - [Doc-Comments](#doc-comments)
+- [🧩 Variables & Types](#-variables--types)
+  - [Declarations](#declarations)
+  - [Destructuring & Spread](#destructuring--spread)
+  - [BigInts](#bigints)
+- [🎮 Control Flow](#-control-flow)
+  - [If / Else](#if--else)
+  - [Match Expressions (Pattern Matching)](#match-expressions-pattern-matching)
+  - [Loops](#loops)
+- [🎯 Functions & Callbacks](#-functions--callbacks)
+  - [Named Functions & Rest Params](#named-functions--rest-params)
+  - [Implicit Returns](#implicit-returns)
+  - [Callbacks (Higher-Order Functions)](#callbacks-higher-order-functions)
+  - [Pipeline Operator (|>)](#pipeline-operator--)
+- [📦 Modules & Imports](#-modules--imports)
+  - [Named Imports & Aliasing](#named-imports--aliasing)
+- [📦 Standard Library](#-standard-library)
+  - [📁 fs (File System) & JSON](#-fs-file-system--json)
+  - [💻 console & Benchmarking](#-console--benchmarking)
+  - [🌐 Global Functions](#-global-functions)
+  - [⚙️ process](#-process)
+  - [🗺️ Map (HashMap)](#-map-hashmap)
+  - [📅 Date](#-date)
+- [🏛️ Object-Oriented Programming](#-object-oriented-programming)
+  - [Access Modifiers](#access-modifiers)
+- [🧙‍♂️ Advanced: Native Addons (C++ Integration)](#-advanced-native-addons-c-integration)
+  - [1. File Placement & Naming](#1-file-placement--naming)
+  - [2. Write the C++ Code (my_func.cpp)](#2-write-the-c-code-my_funccpp)
+  - [3. Compile to Shared Object](#3-compile-to-shared-object)
+  - [4. Use in SP](#4-use-in-sp)
+  - [🧙‍♂️ Cross-Language Addons](#-cross-language-addons)
+  - [⚡ Optimization: Minimal C Header](#-optimization-minimal-c-header)
+  - [🛠️ Compiling & Linking Addons](#-compiling--linking-addons)
+
+---
+
 ---
 
 ## 🚀 Getting Started
