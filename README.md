@@ -4,22 +4,27 @@ A modern, strongly-typed, and expressive language designed for performance and s
 
 ---
 
-## 🚀 Quick Start
+## 🚀 Installation (Mac & Linux)
 
-### 1. Build the Interpreter
-The SP interpreter is designed to be statically linked and portable. Simply run:
+SP is distributed as a standalone binary for **Mac** and **Linux**.
+
+### 1. Setup
+Download the `sp` binary and move it to a directory in your `$PATH`, or run it directly from your current folder.
+
+### 2. Add to PATH (Optional)
+To use `sp` globally, add the following to your `.bashrc` or `.zshrc`:
 ```bash
-make
+export PATH=$PATH:/path/to/sp_directory
 ```
 
-### 2. Run Your First Script
+### 3. Run Your First Script
 Create a file named `hello.sp`:
 ```sp
 console.show("Hello, SP World!")
 ```
-Run it with the interpreter:
+Run it:
 ```bash
-./sp_interpreter hello.sp
+./sp hello.sp
 ```
 
 ---

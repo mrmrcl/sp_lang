@@ -18,10 +18,10 @@ Welcome to the **SP Programming Language**! SP is a modern, strongly-typed, and 
 
 ## Getting Started
 
-To run an SP script, use the `sp_interpreter` executable:
+To run an SP script, use the `sp` executable:
 
 ```bash
-./sp_interpreter hello.sp
+./sp hello.sp
 ```
 
 ### Your First Script: Hello World
@@ -266,7 +266,6 @@ myMap.forEach((k, v) => console.show(k, v))
 
 // Note: HashMap is an alias for Map.
 ```
-```
 
 ### `Date`
 Use the `Date` object to work with time.
@@ -277,7 +276,6 @@ console.show("Current timestamp: {today}")
 
 // Properties: year, month, day, hour, minute, second
 console.show(today.year)
-```
 ```
 
 ### `process`
