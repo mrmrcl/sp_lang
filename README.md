@@ -27,6 +27,7 @@ Run it:
 ./sp hello.sp
 ```
 
+For windows, download .exe from "Releases" and... Run it?
 ---
 
 ## 🎨 VS Code Extension
