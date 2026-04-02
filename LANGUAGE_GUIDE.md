@@ -178,6 +178,25 @@ Returns a detailed object containing all file metadata:
 | `time()` | Returns current timestamp in **milliseconds**. |
 | `floor(n)` | Returns the floor of a number. |
 
+### 🌐 Global Functions
+These functions are available globally in every script without needing an import.
+
+#### `time()`
+Returns the current unix timestamp in **milliseconds**. This is useful for benchmarking or calculating durations.
+```sp
+set start = time()
+// ... do some work ...
+set end = time()
+console.show("Took: {end - start}ms")
+```
+
+#### `floor(n)`
+Rounds a number **down** to the nearest integer.
+```sp
+console.show(floor(10.7)) // Outputs: 10
+console.show(floor(5.2))  // Outputs: 5
+```
+
 ---
 
 ## 🏛️ Object-Oriented Programming
