@@ -48,6 +48,7 @@ The following examples demonstrate how to implement a basic `add_numbers` functi
 - [🐱 LOLCODE](#-lolcode)
 - [💀 Brainfuck](#-brainfuck)
 - [🔱 Common Lisp](#-common-lisp)
+- [🐚 Bash](#-bash)
 
 ---
 
@@ -593,7 +594,39 @@ The ultimate systems programming language. Since Brainfuck is minimalist, it is 
     "/* Add logic here */"
     :one-liner t))
 ```
+```
 **Compile:** `ecl -build-node shared-library -o libmy_addon.so addon.lisp`
+
+---
+
+### 🐚 Bash
+Because why not? While Bash cannot be compiled into a `.so` directly, you can create a thin C wrapper that calls your script or uses `popen` to execute shell commands.
+
+```c
+#include "sp_addon.h"
+#include <stdio.h>
+#include <stdlib.h>
+
+uint64_t add_numbers(void* i, const sp_args* args) {
+    if (SP_ARGS_LEN(args) < 2) return 0;
+    
+    double d1 = SP_AS_NUMBER(SP_GET_ARG(args, 0));
+    double d2 = SP_AS_NUMBER(SP_GET_ARG(args, 1));
+    
+    char cmd[256];
+    sprintf(cmd, "echo 'scale=10; %f + %f' | bc", d1, d2);
+    
+    FILE *fp = popen(cmd, "r");
+    if (fp == NULL) return 0;
+    
+    double result;
+    if (fscanf(fp, "%lf", &result) != 1) result = 0;
+    pclose(fp);
+    
+    return SP_MAKE_NUMBER(result).bits;
+}
+```
+**Compile:** `gcc -O3 -shared -fPIC addon.c -o libmy_addon.so`
 
 ---
 

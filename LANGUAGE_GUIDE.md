@@ -414,6 +414,7 @@ When compiling your addon, there are a few critical requirements:
 | **LOLCODE** | `gcc -shared -fPIC addon.c -llolcode -o libmy_addon.so` |
 | **Brainfuck** | `gcc -shared -fPIC bf_wrapper.c -o libmy_addon.so` |
 | **Common Lisp** | `ecl -build-node shared-library -o libmy_addon.so addon.lisp` |
+| **Bash** | `gcc -O3 -shared -fPIC addon.c -o libmy_addon.so` |
 
 > [!TIP]
 > Always ensure your shared object starts with the `lib` prefix (e.g., `libmath.so`) to be correctly discovered by the `use` statement in SP.
