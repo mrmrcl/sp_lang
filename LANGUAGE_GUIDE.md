@@ -113,7 +113,7 @@ define sumAll = (...args) => {
 ```
 
 ### Callbacks (Higher-Order Functions)
-Functions are first-class citizens. You can pass them as arguments.
+Functions are first-class citizens. You can pass them as arguments to other functions like `arr.forEach`.
 ```sp
 define processList = (list, callback) => {
     for item in list { callback(item) }
@@ -156,21 +156,27 @@ console.show(m.add(1, 2))
 | `fs.write(path, data)` | Overwrites a file. |
 | `fs.readJson(path)` | Reads and parses JSON into an SP object. |
 | `fs.writeJson(path, obj)` | Serializes and writes JSON. |
-| `fs.info(path)` | Returns detailed object (path, size, exists, etc.). |
+
+#### `fs.info(path)` (Exhaustive)
+Returns a detailed object containing all file metadata:
+- `path` (string): The absolute path to the file.
+- `dirname` (string): Path to the parent directory.
+- `name` (string): The filename including extension.
+- `ext` (string): The file extension (e.g. `.sp`).
+- `size` (number): File size in bytes.
+- `length` (number): An alias for `size`.
+- `exists` (boolean): `true` if the file/path exists.
+- `modifiedAt` (Date): A **Date** object for the last modification time.
+- `createdAt` (Date): A **Date** object for the file creation time.
 
 ### 💻 `console` & Benchmarking
 | Method | Description |
 | :--- | :--- |
 | `console.args()` | Returns an **Array** of CLI arguments. |
+| `console.warn(...)` | Prints a yellow warning to stderr. |
+| `console.read()` | Reads a single line from standard input. |
 | `time()` | Returns current timestamp in **milliseconds**. |
 | `floor(n)` | Returns the floor of a number. |
-
-**Benchmark Example**:
-```sp
-set start = time()
-// ... do work ...
-console.show("Took: {time() - start}ms")
-```
 
 ---
 
@@ -195,30 +201,36 @@ bot.charge()
 
 SP allows you to load native C++ shared objects (`.so`) as modules.
 
-### 1. Write the C++ Code (`addon.cpp`)
+### 1. File Placement & Naming
+For a module called `"my_addon"`, SP searches for a file named **`libmy_addon.so`** in the following locations (in order):
+1.  **`./`** (The current working directory)
+2.  **`./modules/`** (A subfolder in your project)
+3.  **System Paths** (Standard library locations)
+
+### 2. Write the C++ Code (`my_func.cpp`)
 ```cpp
 #include "types.h"
 #include <vector>
 
 extern "C" {
     uint64_t my_native_func(Interpreter& interp, const std::vector<Value>& args) {
-        // args[0] is the first argument from SP
         return Value(42.0).bits; // Always return Value.bits
     }
 }
 ```
 
-### 2. Compile to Shared Object
+### 3. Compile to Shared Object
 ```bash
-g++ -O3 -shared -fPIC addon.cpp -o my_addon.so
+g++ -O3 -shared -fPIC my_func.cpp -o libmy_addon.so
 ```
 
-### 3. Use in SP
+### 4. Use in SP
 ```sp
+// SP will search for libmy_addon.so in ./ or ./modules/
 use { my_native_func } from "my_addon"
 console.show(my_native_func()) // 42
 ```
 
 ---
 
-Happy Coding with **SP**!
+Happy Coding with **SP**! 
