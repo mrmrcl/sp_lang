@@ -1,255 +1,200 @@
-# SP Language Guide
+# 🌌 SP Language Guide
 
-Welcome to the **SP Programming Language**! SP is a modern, strongly-typed, and expressive language designed for simplicity and performance. Whether you are a beginner or an experienced developer, this guide will help you get started.
-
----
-
-## Table of Contents
-1. [Getting Started](#getting-started)
-2. [Variables & Mutability](#variables--mutability)
-3. [Data Types](#data-types)
-4. [Control Flow](#control-flow)
-5. [Functions & Closures](#functions--closures)
-6. [The Pipeline Operator (`|>`)](#the-pipeline-operator)
-7. [Standard Library](#standard-library)
-8. [Object-Oriented Programming (Classes)](#object-oriented-programming)
-9. [IDE Support (VS Code)](#ide-support)
+Welcome to the **SP Programming Language**! SP is a modern, strongly-typed, and expressive language designed for performance and simplicity. It features a self-contained compiler and virtual machine, accessible through a single, statically-linked standalone executable.
 
 ---
 
-## Getting Started
+## 🚀 Getting Started
 
-To run an SP script, use the `sp` executable included in this repository:
+### 1. Download & Prepare
+Download the `sp` executable from the repository and ensure it has execution permissions:
+```bash
+chmod +x sp
+```
 
+### 2. Run Your First Script
+Create `hello.sp` and run it:
+```sp
+console.show("Hello, SP!")
+```
 ```bash
 ./sp hello.sp
 ```
 
-### Your First Script: Hello World
-Create a file named `hello.sp` and add the following:
+---
 
-```sp
-console.show("Hello, World!")
-```
+## 📘 IDE Support
+
+For the best experience, use our **[Visual Studio Code extension](./sp-language-vscode-0.1.4.vsix)**.
+- **Features**: Syntax highlighting, Diagnostics, Hover Info, and IntelliSense.
+- **Install**: `code --install-extension sp-language-vscode-0.1.4.vsix`
 
 ---
 
-## IDE Support
+## 🧩 Variables & Types
 
-For the best development experience, we recommend using the **SP Language** extension for **Visual Studio Code**.
+### Declarations
+- **`set`**: Immutable (constant).
+- **`var`**: Mutable (can be reassigned).
 
-### Features
-- **Syntax Highlighting**: Beautiful coloring for the modern SP syntax.
-- **IntelliSense**: Auto-completion for variables, functions, and object properties (including nested ones like `obj.a.b`).
-- **Hover Information**: Instant documentation and type inference when hovering over identifiers.
-- **Diagnostics**: Real-time error reporting for syntax and simple type mismatches.
+```sp
+set pi = 3.14159          // Constant
+var score = 100           // Variable
+score = 105               // Re-assignment
+```
 
-### Installation
-1.  Download the `sp-language-vscode-0.1.4.vsix` file from the repository.
-2.  Install it via the VS Code extensions menu or the command line:
-    ```bash
-    code --install-extension sp-language-vscode-0.1.4.vsix
+### Data Types
+- **Numbers & BigInts**: `42`, `3.14`, `1000000000n`.
+- **Strings**: Supports interpolation with `{ }`.
+    ```sp
+    set user = "Alice"
+    console.show("Welcome, {user}!") 
+    ```
+- **Arrays**: `[1, 2, 3]`. Supports `.length`.
+- **Objects**: `{key: "value"}`. Access properties with dot `.`.
+- **Map / HashMap**: Built-in for efficient key-value storage.
+    ```sp
+    set store = Map()
+    store.set("apples", 10)
+    console.show(store.get("apples")) // 10
     ```
 
-
 ---
 
-## Variables & Mutability
-
-SP distinguishes between constants and mutable variables.
-
-- **`set`**: Creates an **immutable** variable (a constant). Once set, it cannot be changed.
-- **`var`**: Creates a **mutable** variable. Use this if you need to update the value later.
-
-```sp
-set name = "Alice"   // This cannot be changed
-var age = 25         // This can be updated
-age = 26             // Works!
-```
-
----
-
-## Data Types
-
-SP supports several built-in types:
-
-- **Numbers**: `10`, `3.14`
-- **Strings**: `"Hello"`, `"Value is: {x}"` (Suppports interpolation using `{ }`)
-- **Booleans**: `true`, `false`
-- **BigInts**: `1000000000000000000n` (Suffix with `n`)
-- **Arrays**: `[1, 2, 3]`
-- **Objects**: `{name: "Bob", age: 30}`
-- **Null & Undefined**: `null`, `undefined`
-
----
-
-## Control Flow
+## 🎮 Control Flow
 
 ### If / Else
-`if` can be used as a statement or an expression.
-
+`if` expressions return the value of the successful branch.
 ```sp
-set x = 10
-if x > 5 {
-    console.show("Big")
-} else {
-    console.show("Small")
-}
-
-// As an expression:
-set status = if x > 5 { "Active" } else { "Inactive" }
+set status = if score > 100 { "Pro" } else { "Beginner" }
 ```
 
-### Match Expression (Pattern Matching)
-A cleaner way to handle multiple conditions.
-
+### Match Expressions (Pattern Matching)
+A robust way to branch based on values.
 ```sp
-set choice = 2
-set name = match choice {
-    1: "One",
-    2: "Two",
-    default: "Unknown"
+set result = match score {
+    100: "Perfect!",
+    90: "Great!",
+    default: "Keep trying"
 }
 ```
 
 ### Loops
-- **While**: `while condition { ... }`
-- **For-In**: `for item in collection { ... }`
-
+- **`while condition { ... }`**: Standard loop.
+- **`for item in collection { ... }`**: Iterates over arrays.
 ```sp
-var i = 0
-while i < 5 {
-    console.show(i)
-    i = i + 1
-}
-
-for n in [10, 20, 30] {
-    console.show("Number: {n}")
+for name in ["Alice", "Bob"] {
+    console.show("Hi, {name}")
 }
 ```
 
 ---
 
-## Functions & Closures
+## 🎯 Functions & Closures
 
-### Defining Functions
-Use the `define` keyword to create named functions.
-
+### Named Functions
 ```sp
 define add = (a, b) => a + b
-
-define greet = (name) => {
-    console.show("Hello, {name}!")
-}
 ```
 
-### Closures
-Functions can capture variables from their outer scope.
-
+### Pipeline Operator (`|>`)
+Chain function calls from left to right. Use `_` as a placeholder for the piped value.
 ```sp
-define makeAdder = (x) => {
-    return (y) => x + y
-}
-set add5 = makeAdder(5)
-console.show(add5(10)) // Outputs 15
+define double = (n) => n * 2
+10 |> double |> console.show(_) // Outputs: 20
 ```
 
 ---
 
-## The Pipeline Operator
+## 📦 Standard Library
 
-The pipe operator `|>` allows you to chain function calls in a readable left-to-right fashion.
+### 📁 `fs` (File System)
+The `fs` module handles all file operations.
 
+| Method | Description |
+| :--- | :--- |
+| `fs.read(path)` | Returns file content as a string or `null`. |
+| `fs.write(path, data)` | Overwrites a file with the provided data. |
+| `fs.append(path, data)` | Appends data to an existing file. |
+| `fs.delete(path)` | Deletes a file. |
+| `fs.readJson(path)` | Reads and parses a JSON file into an SP object. |
+| `fs.writeJson(path, obj)` | Serializes an SP object to JSON and writes to disk. |
+
+#### `fs.info(path)`
+Returns a detailed object for a file:
 ```sp
-define double = (x) => x * 2
-define log = (x) => console.show("Result: {x}")
-
-// Without pipes: log(double(10))
-// With pipes:
-10 |> double |> log
+set info = fs.info("data.txt")
+console.show("Size:", info.size)        // Bytes
+console.show("Extension:", info.ext)    // e.g. ".txt"
+console.show("Modified:", info.modifiedAt) // Date object
 ```
+**Return Object Details**:
+- `path` (string): Absolute path.
+- `dirname` (string): Parent directory.
+- `name` (string): Filename with extension.
+- `ext` (string): Extension (includes `.`).
+- `size` (number): File size in bytes.
+- `exists` (boolean): Whether the file exists.
+- `modifiedAt` (Date): Last modification time.
+- `createdAt` (Date): Creation time.
 
-### Placeholders (`_`)
-If a function takes multiple arguments, use `_` to represent the piped value.
+### 💻 `console`
+| Method | Description |
+| :--- | :--- |
+| `console.show(...)` | Prints values to stdout with a newline. |
+| `console.warn(...)` | Prints values to stderr in yellow. |
+| `console.read()` | Reads a line from the user's input. |
+| `console.args()` | Returns an **Array** of CLI arguments passed to the script. |
 
-```sp
-define greet = (greeting, name) => console.show("{greeting}, {name}!")
+### 🛠️ `process`
+| Method | Description |
+| :--- | :--- |
+| `process.run(cmd, args)` | Sync: Runs command and returns exit code. |
+| `process.spawn(cmd, args)`| Async: Starts a background process. |
 
-"Alice" |> greet("Hello", _) // Outputs: Hello, Alice!
-```
+### 🗺️ `Map` / `HashMap`
+| Method | Description |
+| :--- | :--- |
+| `set(key, val)` | Stores a value. Returns Map (for chaining). |
+| `get(key)` | Retrieves a value or `null`. |
+| `has(key)` | Returns `true` if the key exists. |
+| `delete(key)` | Removes an entry. |
+| `clear()` | Removes all entries. |
+| `keys()` | Returns an **Array** of all keys. |
+| `values()` | Returns an **Array** of all values. |
+| `forEach(fn)` | Calls `fn(key, value)` for each entry. |
+
+### 🕒 `Date`
+Created with `Date.now()`. Properties:
+- `year`, `month` (1-12), `day`.
+- `hour`, `minute`, `second`.
+- `toString()`: Formats as "YYYY-MM-DD HH:MM:S".
 
 ---
 
-## Standard Library
+## 🏛️ Object-Oriented Programming
 
-### `console`
-- `console.show(args...)`: Prints values to the screen.
-- `console.read()`: Reads a line of text from the user.
-
-### `fs` (File System)
-- `fs.read(path)`: Returns file content as a string.
-- `fs.write(path, content)`: Writes content to a file.
-- `fs.append(path, content)`: Appends content to a file.
-- `fs.delete(path)`: Deletes a file.
-- `fs.info(path)`: Returns an object with file details.
-- `fs.readJson(path)`: Reads a JSON file and parses it into an SP object.
-- `fs.writeJson(path, content)`: Converts an SP object to JSON and writes it to a file.
-
-### `math`
-- Use `use math` to access math functions like `math.add(a, b)`.
-- Global functions: `floor(n)`, `time()`.
-
-### `Map`
-SP provides a `Map` (also aliased as `HashMap`) for efficient key-value storage.
+Define templates for reusable objects using `class`.
 
 ```sp
-set myMap = Map()
-myMap.set("key", "value")
-console.show(myMap.get("key"))
-```
+class Robot {
+    readonly id
+    var power = 100
 
-### `Date`
-Use the `Date` object to work with time.
-
-```sp
-set today = Date.now()
-console.show("Current timestamp: {today}")
-```
-
-### `process`
-- `process.run(cmd, args)`: Executes a command and waits for it to finish.
-- `process.spawn(cmd, args)`: Starts a background process.
-
----
-
-## Object-Oriented Programming
-
-SP supports classes with modern features like access modifiers.
-
-```sp
-class Person {
-    readonly name           // Read-only property
-    private secret          // Private property
-    var age                 // Mutable property
-
-    define init = (name, secret, age) => {
-        this.name = name
-        this.secret = secret
-        this.age = age
+    define init = (id) => {
+        this.id = id
     }
 
-    define sayHello = () => {
-        console.show("Hi, I'm {this.name}")
+    define charge = () => {
+        this.power = 100
+        console.show("Robot {this.id} charged.")
     }
 }
 
-set bob = Person("Bob", "TopSecret", 30)
-bob.sayHello()
+set bot = Robot("SP-1")
+bot.charge()
 ```
-
-### Abstract Classes
-Use `abstract class` for base classes that shouldn't be instantiated directly.
 
 ---
 
-Enjoy coding in **SP**! If you find any bugs, deal with it (by reporting to SwyftPain)!
+Happy Coding with **SP**! 
