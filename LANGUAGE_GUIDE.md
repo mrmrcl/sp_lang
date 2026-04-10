@@ -8,11 +8,19 @@ Welcome to the **SP Programming Language**! SP is a modern and expressive langua
 1. [Getting Started](#getting-started)
 2. [Variables & Mutability](#variables--mutability)
 3. [Data Types](#data-types)
-4. [Control Flow](#control-flow)
-5. [Functions & Closures](#functions--closures)
-6. [The Pipeline Operator (`|>`)](#the-pipeline-operator)
-7. [Standard Library](#standard-library)
-8. [Object-Oriented Programming (Classes)](#object-oriented-programming)
+4. [Gradual Typing (Optional Types)](#gradual-typing-optional-types)
+5. [Layouts & Structural Typing](#layouts--structural-typing)
+6. [Control Flow](#control-flow)
+7. [Functions & Closures](#functions--closures)
+8. [Destructuring & Spread](#destructuring--spread)
+9. [The Pipeline Operator (`|>`)](#the-pipeline-operator)
+10. [Module System](#module-system)
+11. [Error Handling](#error-handling)
+12. [Async Futures](#async-futures)
+13. [Networking & Web](#networking--web)
+14. [Standard Library](#standard-library)
+15. [Object-Oriented Programming (Classes)](#object-oriented-programming)
+16. [Regex & Pattern Matching](#regex--pattern-matching)
 
 ---
 
@@ -62,6 +70,91 @@ SP supports several built-in types:
 
 ---
 
+## Gradual Typing (Optional Types)
+
+SP is a **gradually typed** language. This means you can choose to omit types for flexibility or add them for safety and clarity. Types are enforced at **runtime**.
+
+### Type Annotations
+You can add type annotations to variables using the `: type` syntax.
+
+```sp
+var count: number = 42
+var name: string = "Alice"
+var isActive: boolean = true
+var items: array = [1, 2, 3]
+```
+
+### Function Types
+Functions can also have types for their parameters and return values.
+
+```sp
+// Explicit parameter types and return type
+define add = (a: number, b: number): number => a + b
+
+// Grouped parameter types
+define greet = (name, title: string): string => {
+    return "Hello, {title} {name}"
+}
+```
+
+### Union Types
+Use the `|` operator to allow a variable to hold multiple types.
+
+```sp
+var id: string | number = 101
+id = "UID-202" // Valid
+```
+
+### Generics
+SP supports basic generics for built-in container types like `Array`.
+
+```sp
+var scores: Array<number> = [95, 80, 100]
+var names: Array<string> = ["Alice", "Bob"]
+```
+
+---
+
+## Layouts & Structural Typing
+
+**Layouts** allow you to define the structure of objects. Unlike classes, they are purely structural and focus on the shape of the data.
+
+### Defining a Layout
+```sp
+layout Point {
+    x: number,
+    y: number
+}
+
+layout User {
+    id: number,
+    name: string
+}
+```
+
+### Intersection Types (`&`)
+You can compose layouts using the intersection operator `&` to create new types that combine properties.
+
+```sp
+layout Named = { name: string }
+layout Aged = { age: number }
+
+layout Person = Named & Aged
+// Person now requires both 'name' and 'age'
+```
+
+### Inline Structural Types
+You don't always need to define a named layout. You can use structural literals directly in function signatures.
+
+```sp
+define move = (p: { x: number, y: number }, dx, dy) => {
+    p.x = p.x + dx
+    p.y = p.y + dy
+}
+```
+
+---
+
 ## Type Methods
 
 SP provides built-in methods for core data types to make manipulation easy and expressive.
@@ -73,8 +166,11 @@ SP provides built-in methods for core data types to make manipulation easy and e
 - `s.startsWith(sub)` / `s.endsWith(sub)`: Prefix/Suffix checks.
 - `s.indexOf(sub)`: Returns the first index of `sub`, or `-1`.
 - `s.split(sep)`: Splits the string into an array.
-- `s.replace(from, to)`: Replaces first occurrence.
 - `s.substring(start, end)`: Extracts a portion of the string.
+- `s.match(regex)`: Returns an array of matches (and capture groups).
+- `s.replace(regex|string, to)`: Replaces occurrences of a pattern. (See Regex section for `.global()`).
+- `s.padStart(len, char)`: Pads the string at the start.
+- `s.repeat(n)`: Repeats the string `n` times.
 
 ### 📦 Array Methods
 - `arr.push(val)` / `arr.pop()`: Add/remove from end.
@@ -85,6 +181,7 @@ SP provides built-in methods for core data types to make manipulation easy and e
 - `arr.slice(start, end)`: Returns a shallow copy of a portion.
 - `arr.contains(val)` / `arr.includes(val)`: Checks for value.
 - `arr.indexOf(val)`: Returns index of value.
+- `arr.find(callback)`: Returns the first element that satisfies the test.
 
 #### ⚡ Functional Methods
 - `arr.map(callback)`: Returns a new array with transformed items.
@@ -186,6 +283,75 @@ Functions in SP return the value of the last expression in their block if no `re
 define multiply = (a, b) => a * b // Implicitly returns a * b
 ```
 
+### Rest Parameters
+Use the spread operator `...` to capture a variable number of arguments into an array.
+
+```sp
+define sumAll = (...numbers) => {
+    var total = 0
+    for n in numbers { total = total + n }
+    return total
+}
+console.show(sumAll(1, 2, 3, 4)) // Outputs 10
+```
+
+---
+
+## Destructuring & Spread
+
+SP provides powerful syntax for unpacking values from arrays and objects.
+
+### Array Destructuring
+```sp
+set arr = [1, 2, 3, 4]
+set [first, second, ...rest] = arr
+
+console.show(first)  // 1
+console.show(second) // 2
+console.show(rest)   // [3, 4]
+```
+
+### Object Destructuring
+You can extract properties and even rename them.
+```sp
+set user = { name: "Alice", age: 25, role: "admin" }
+set { name, age: years, ...others } = user
+
+console.show(name)   // "Alice"
+console.show(years)  // 25
+console.show(others) // { role: "admin" }
+```
+
+### Nested Destructuring
+```sp
+set data = { 
+    meta: { status: 200 }, 
+    items: ["apple", "banana"] 
+}
+set { meta: { status }, items: [firstItem] } = data
+
+console.show(status)    // 200
+console.show(firstItem) // "apple"
+```
+
+### Spread Operators
+Use `...` to expand arrays or objects into new ones.
+```sp
+set defaults = { theme: "dark", notify: true }
+set settings = { ...defaults, notify: false, user: "Alice" }
+
+set base = [2, 3]
+set full = [1, ...base, 4]
+```
+
+### Call Spread
+You can also use spread when calling functions.
+```sp
+define logPoints = (x, y, z) => console.show(x, y, z)
+set pos = [10, 20, 30]
+logPoints(...pos)
+```
+
 ---
 
 ## The Pipeline Operator
@@ -208,6 +374,225 @@ If a function takes multiple arguments, use `_` to represent the piped value.
 define greet = (greeting, name) => console.show("{greeting}, {name}!")
 
 "Alice" |> greet("Hello", _) // Outputs: Hello, Alice!
+```
+
+---
+
+## Module System
+
+SP uses a simple and flexible module system to organize code.
+
+### Importing Modules
+Use the `use` keyword to bring in other files.
+
+```sp
+// Standard import (namespaced)
+use math
+console.show(math.add(5, 10))
+
+// With alias
+use math as m
+console.show(m.add(2, 3))
+```
+
+### Named Imports
+You can import specific members directly into the current scope.
+
+```sp
+use { add, pi } from math
+console.show(add(1, 2))
+
+// With aliases
+use { add as plus, pi as PI } from math
+```
+
+### Exporting
+To make functions or variables available to other files, use the `export` keyword.
+
+```sp
+// math.sp
+export set pi = 3.14159
+export define add = (a, b) => a + b
+```
+
+---
+
+## Error Handling
+
+SP emphasizes functional error handling and provides built-in support for capturing failures.
+
+### Functional Error Pattern
+Many operations return a `[result, error]` pair. You can destructure this to handle errors gracefully.
+
+```sp
+define safeDivide = (a, b) => {
+    if b == 0 { return [null, "Division by zero"] }
+    return [a / b, null]
+}
+
+var [res, err] = safeDivide(10, 0)
+if err {
+    console.show("Error occurred: {err}")
+} else {
+    console.show("Result: {res}")
+}
+```
+
+### The `Error` Object
+Use the `Error` constructor to create structured error data.
+```sp
+var myErr = Error("Something went wrong", 500)
+console.show(myErr.message) // "Something went wrong"
+console.show(myErr.code)    // 500
+```
+
+### `.error()` Callback
+Typed variables provide a `.error()` method to catch runtime type mismatches.
+
+```sp
+var x: number = "not a number"
+x.error((e) => {
+    console.show("Caught type error: {e.message}")
+})
+```
+
+---
+
+## Async Futures
+
+SP uses **Futures** to handle values that will be available later. These are returned by `async` operations and network requests.
+
+### Waiting for Results
+Use the `.wait()` method to synchronously pause the current thread and get the value from a future.
+
+```sp
+set fut = async {
+    process.sleep(1000)
+    return "Done!"
+}
+set result = fut.wait()
+console.show(result)
+```
+
+### Implicit Unwrapping
+One of SP's most powerful features is **implicit unwrapping**. If you access a property on a future, it automatically waits for the result before proceeding.
+
+```sp
+set userFut = async { return { name: "Alice" } }
+console.show(userFut.name) // Automatically waits and prints "Alice"
+```
+
+### Error Handling
+Futures provide an `.error()` method to handle failures that occur during asynchronous execution.
+
+```sp
+set fut = async fs.read("missing.txt")
+fut.error((e) => console.show("Async error: {e}"))
+```
+
+---
+
+## Networking & Web
+
+The `net` (also aliased as `http`) module provides tools for building web clients and servers.
+
+### Making Requests
+You can easily make HTTP GET and POST requests.
+
+```sp
+use net
+
+// GET Request
+set res = net.get("https://api.example.com/data")
+console.show("Status: {res.status}")
+
+// POST Request with JSON
+set newUser = { name: "Bob" }
+set postRes = net.post("https://api.example.com/users", newUser)
+```
+
+### The Response Object
+Network requests return a `Response` object with the following:
+- `.status`: The HTTP status code (e.g., 200, 404).
+- `.body`: The raw response body as a string.
+- `.headers`: An object containing the response headers.
+- `.json()`: A method that parses the body as JSON and returns an SP object.
+
+### Building a Server
+You can start an HTTP server with `net.serve`.
+
+```sp
+use net
+
+net.serve(8080, (req) => {
+    console.show("Received {req.method} request for {req.path}")
+    
+    return {
+        status: 200,
+        body: { message: "Hello from SP!" },
+        headers: { "X-Powered-By": "SP" }
+    }
+})
+```
+
+### The Request Object
+The server handler receives a `Request` object:
+- `.method`: The HTTP method (GET, POST, etc.).
+- `.path`: The request path.
+- `.headers`: Request headers.
+- `.query`: URL query parameters.
+- `.body`: The raw request body.
+
+---
+
+## Concurrency & Timing
+
+SP provides modern, easy-to-use constructs for handling asynchronous tasks and time-based logic.
+
+### ⚡ Async Tasks
+Use `async` to run a block of code in the background without blocking the main thread.
+
+```sp
+async {
+    console.show("Starting heavy task...")
+    process.sleep(2000)
+    console.show("Task complete!")
+}
+console.show("Main thread is still running!")
+```
+
+### ⏱️ Delayed Execution (`after`)
+Execute a block of code once after a specified delay in milliseconds.
+
+```sp
+after 1000 {
+    console.show("One second has passed!")
+}
+```
+
+### 🔄 Repeating Timers (`every`)
+Execute a block of code repeatedly at a specified interval. It returns a `Timer` object that can be stopped.
+
+```sp
+var count = 0
+set timer = every 500 {
+    count = count + 1
+    console.show("Tick {count}")
+    
+    if count == 10 {
+        timer.stop()
+        console.show("Timer stopped.")
+    }
+}
+```
+
+### 😴 Synchronous Sleep
+If you need to pause the current thread execution for a specific duration, use `process.sleep(ms)`.
+
+```sp
+console.show("Wait a moment...")
+process.sleep(1500) // Sleep for 1.5 seconds
+console.show("Continue!")
 ```
 
 ---
@@ -262,7 +647,7 @@ console.show(myMap.get("key"))
 myMap.size // 1
 myMap.delete("key")
 myMap.clear()
-myMap.forEach((k, v) => console.show(k, v))
+myMap.forEach((k, v) => console.show("{k}: {v}"))
 
 // Note: HashMap is an alias for Map.
 ```
@@ -311,6 +696,64 @@ bob.sayHello()
 
 ### Abstract Classes
 Use `abstract class` for base classes that shouldn't be instantiated directly. Properties can also be marked as `readonly` or `private`.
+
+---
+
+## Regex & Pattern Matching
+
+SP features a powerful, chainable **Regex Builder API** that makes complex patterns readable and easy to maintain.
+
+### 🧩 Creating a Regex
+You can create a regex using a literal string or the builder:
+
+```sp
+// Literal Regex
+set r1 = regex("^\d{3}-\d{4}$")
+
+// Builder Regex (Equivalent)
+set r2 = regex.start().digit().repeat(3).text("-").digit().repeat(4).end()
+```
+
+### 🛠️ Builder Methods
+Builder methods can be chained to construct patterns step-by-step:
+
+- **Character Classes**: `.digit()`, `.nonDigit()`, `.word()`, `.letter()`, `.whitespace()`, `.any()`.
+- **Anchors**: `.start()`, `.end()`, `.wordBoundary()`.
+- **Literals**: `.text("string")`, `.range("a", "z")`.
+- **Quantifiers**: 
+    - `.maybe()` / `.optional()` (0 or 1)
+    - `.oneOrMore()` (1+)
+    - `.zeroOrMore()` (0+)
+    - `.repeat(n)` / `.repeat(min, max)`
+    - `.repeatAtLeast(min)`
+- **Groups**: `.capture(inner)`, `.group(inner)`.
+- **Logic**: `.or(other)`.
+
+### 🌍 Global Flag
+By default, regex replacement only affects the **first** occurrence. Use `.global()` to replace all matches:
+
+```sp
+set s = "123-456-789"
+console.show(s.replace(regex("\d"), "X"))          // Outputs: X23-456-789
+console.show(s.replace(regex("\d").global(), "X")) // Outputs: XXX-XXX-XXX
+```
+
+### 🔍 String Integration
+- **`s.match(regex)`**: Returns an array of matches. If capturing groups are used, it returns an array containing the full match followed by the groups.
+- **`s.replace(regex, to)`**: Replaces matches in the string. Honors the `.global()` flag.
+
+### 🎯 Pattern Matching with Regex
+The `match` expression natively supports regex objects as patterns:
+
+```sp
+set input = "user_123"
+set type = match input {
+    regex("^user_\d+$"): "User ID",
+    regex("^admin_.*"):  "Admin Access",
+    default:             "Guest"
+}
+console.show(type) // Outputs: User ID
+```
 
 ---
 
