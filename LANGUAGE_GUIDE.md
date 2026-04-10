@@ -15,12 +15,16 @@ Welcome to the **SP Programming Language**! SP is a modern and expressive langua
 8. [Destructuring & Spread](#destructuring--spread)
 9. [The Pipeline Operator (`|>`)](#the-pipeline-operator)
 10. [Module System](#module-system)
-11. [Error Handling](#error-handling)
+11. [Type Assertions (`as`)](#type-assertions-as)
+12. [Native Addon Types (`.spd`)](#native-addon-types-spd)
+13. [Error Handling](#error-handling)
 12. [Async Futures](#async-futures)
 13. [Networking & Web](#networking--web)
 14. [Standard Library](#standard-library)
 15. [Object-Oriented Programming (Classes)](#object-oriented-programming)
 16. [Regex & Pattern Matching](#regex--pattern-matching)
+17. [SQLite Database](#sqlite-database)
+18. [Async Storage](#async-storage)
 
 ---
 
@@ -417,6 +421,82 @@ export define add = (a, b) => a + b
 
 ---
 
+## Type Assertions (`as`)
+
+You can cast values to specific types using the `as` operator. This is useful when working with `any` types or when you want to enforce a specific structure.
+
+```sp
+set userProfile = { name: "John", isAdmin: true } as UserProfile
+```
+
+You can also use dotted names for type assertions:
+
+```sp
+use db_addon
+set user = get_user() as db_addon.UserProfile
+```
+
+## Runtime Type Checking (`typeof`)
+
+The `typeof` operator allows you to check the type of a value at runtime. it returns a `string` representing the type.
+
+```sp
+set val = 42
+set t = typeof val // "number"
+
+if typeof val == "number" {
+    console.show("Value is a number!")
+}
+```
+
+Possible return values for `typeof`:
+- `"number"` (includes BigInts)
+- `"string"`
+- `"boolean"`
+- `"array"`
+- `"function"` (includes Classes and Methods)
+- `"null"`
+- `"undefined"`
+- `"error"`
+- `"regex"`
+- `"future"`
+- `"map"`
+- `"timer"`
+- `"object"` (includes instances of classes)
+
+---
+
+## Native Addon Types (`.spd`)
+
+Native addons (written in C++ as `.so` files) can provide type definitions to the SP ecosystem using `.spd` (**SP Definition**) files. These files are similar to TypeScript's `.d.ts` files.
+
+An `.spd` file contains `layout` and `define` statements without full implementation bodies, serving as a contract for the native module.
+
+### Example: `database.spd`
+```sp
+layout QueryResult {
+    rows: Array<object>
+    count: number
+}
+
+export define connect(path: string): { query: (sql: string) => QueryResult } => {
+    // Body can be mock or empty; it's use for type discovery
+}
+```
+
+### Automatic Exports
+Unlike standard `.sp` files, all declarations (layouts, functions, etc.) within an `.spd` file are **automatically exported**. You do not need to use the `export` keyword inside an `.spd` file, although it is supported.
+
+### Usage
+When you `use database`, the SP environment will look for `database.spd` to infer types for the native module. Layouts defined in the `.spd` file become members of the module object:
+
+```sp
+use database
+var data: database.QueryResult // Referencing the layout via the module name
+```
+
+---
+
 ## Error Handling
 
 SP emphasizes functional error handling and provides built-in support for capturing failures.
@@ -500,8 +580,6 @@ The `net` (also aliased as `http`) module provides tools for building web client
 You can easily make HTTP GET and POST requests.
 
 ```sp
-use net
-
 // GET Request
 set res = net.get("https://api.example.com/data")
 console.show("Status: {res.status}")
@@ -522,8 +600,6 @@ Network requests return a `Response` object with the following:
 You can start an HTTP server with `net.serve`.
 
 ```sp
-use net
-
 net.serve(8080, (req) => {
     console.show("Received {req.method} request for {req.path}")
     
@@ -605,10 +681,11 @@ console.show("Continue!")
 
 ### `fs` (File System)
 - `fs.read(path)`: Returns file content as a string.
-- `fs.write(path, content)`: Writes content to a file.
-- `fs.append(path, content)`: Appends content to a file.
+- `fs.create(path, content)`: Creates a new file with the specified content.
+- `fs.overwrite(path, content, options?)`: Overwrites a file. You can specify a `{ line: number }` in options to only overwrite a specific line.
+- `fs.append(path, content, options?)`: Appends content to a file. You can specify a `{ line: number }` in options to append after a specific line (moving rest of file down).
 - `fs.delete(path)`: Deletes a file.
-- `fs.info(path)`: Returns an object with file details.
+- `fs.info(path)`: Returns an object with file details (size, exists, etc.).
 - `fs.readJson(path)`: Reads a JSON file and parses it into an SP object.
 - `fs.writeJson(path, content)`: Converts an SP object to JSON and writes it to a file.
 
@@ -753,6 +830,104 @@ set type = match input {
     default:             "Guest"
 }
 console.show(type) // Outputs: User ID
+```
+
+---
+
+## SQLite Database
+
+The `sqlite` module provides full CRUD (Create, Read, Update, Delete) capabilities for local database management.
+
+### Opening a Connection
+Use `sqlite.open(path)` to connect to a database file. If the file doesn't exist, it will be created.
+
+```sp
+set db = sqlite.open("app.db")
+```
+
+### Executing Commands
+Use `.execute(sql, ...params)` for statements that perform actions but don't return data (like `CREATE`, `INSERT`, `UPDATE`, or `DELETE`). It returns the number of rows affected.
+
+```sp
+// Create a table
+db.execute("CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY, name TEXT)")
+
+// Insert data with parameter binding
+set rowsAdded = db.execute("INSERT INTO users (name) VALUES (?)", "Alice")
+console.show("Added {rowsAdded} user.")
+```
+
+### Querying Data
+Use `.query(sql, ...params)` for `SELECT` statements. It returns an **array of objects**, where each object represents a row.
+
+```sp
+set users = db.query("SELECT * FROM users WHERE name = ?", "Alice")
+
+for user in users {
+    console.show("User: {user.name} (ID: {user.id})")
+}
+```
+
+### Closing the Connection
+It is good practice to close the connection when you are done, although SP will automatically cleanup handles when the database object is no longer in use.
+
+```sp
+db.close()
+```
+
+---
+
+## Async Storage
+
+The `storage` module provides a high-level, asynchronous key-value store. It is built on top of SQLite and automatically handles JSON serialization for complex objects and arrays.
+
+### Basic Usage
+
+```sp
+use storage
+
+// Storing data (returns a Future)
+storage.setItem("user", { name: "Alice", age: 30 })
+
+// Retrieving data (returns a Future, implicitly unwrapped)
+set user = storage.getItem("user")
+console.show("User name: {user.name}")
+
+// Removing data
+storage.removeItem("user")
+
+// Clearing all storage
+storage.clear()
+```
+
+### Explicit Waiting
+While SP automatically unwraps futures, you can use `.wait()` if you need to ensure an operation (like `setItem`) is fully completed before proceeding to the next line of code.
+
+```sp
+storage.setItem("theme", "dark").wait()
+console.show("Theme saved successfully.")
+```
+
+### Automatic JSON Serialization
+Unlike SQLite which requires manual parameter binding and query writing, `storage` handles SP objects and arrays natively using `JSON`.
+
+```sp
+storage.setItem("settings", {
+    theme: "dark",
+    notifications: true,
+    tags: ["work", "personal"]
+})
+
+set settings = storage.getItem("settings")
+console.show(settings.tags[0]) // "work"
+```
+
+### JSON Global Object
+The `JSON` object is also available for manual serialization.
+
+```sp
+set str = JSON.stringify({ a: 1 })
+set obj = JSON.parse(str)
 ```
 
 ---

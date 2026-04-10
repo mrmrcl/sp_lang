@@ -11,6 +11,11 @@
 #include <stdexcept>
 #include <iostream>
 #include <functional>
+#include <regex>
+#include <future>
+#include <thread>
+#include <chrono>
+#include <atomic>
 
 class Expression;
 class Interpreter;
@@ -55,6 +60,23 @@ enum class Type {
     ERROR
 };
 
+struct Heap {
+    std::recursive_mutex mutex;
+    std::vector<std::shared_ptr<std::string>> allStrings;
+    std::vector<std::shared_ptr<std::vector<Value>>> allArrays;
+    std::vector<std::shared_ptr<std::vector<std::pair<std::string, Value>>>> allObjects;
+    std::vector<std::shared_ptr<int64_t>> allBigInts;
+    std::vector<std::shared_ptr<struct DateData>> allDates;
+    std::vector<std::shared_ptr<struct MapData>> allMaps;
+    std::vector<std::shared_ptr<struct ErrorData>> allErrors;
+    std::vector<std::shared_ptr<struct RegexData>> allRegexes;
+    std::vector<std::shared_ptr<struct FutureData>> allFutures;
+    std::vector<std::shared_ptr<struct TimerData>> allTimers;
+    std::vector<std::shared_ptr<class SpInstance>> allInstances;
+    std::vector<std::shared_ptr<class SpClass>> allClasses;
+    std::vector<std::shared_ptr<ICallable>> allFunctions;
+};
+
 // NaN-Boxing Constants: 0x7FF0... is the canonical QNaN prefix.
 // Tags are stored in bits 48-51. If bit 63 is needed for more tags, it can be used.
 #define VALUE_QNAN          0x7FF0000000000000ULL
@@ -79,10 +101,21 @@ enum class Type {
 #define MAKE_TAG_EXT(id)    (((uint64_t)((id) & 0xFULL) << 48) | (1ULL << 63))
 #define TAG_NATIVE_MODULE   MAKE_TAG_EXT(1)
 #define TAG_BUFFER          MAKE_TAG_EXT(2)
+#define TAG_REGEX           MAKE_TAG_EXT(3)
+#define TAG_FUTURE          MAKE_TAG_EXT(4)
+#define TAG_TIMER           MAKE_TAG_EXT(5)
 
 #define QNAN_MASK           0x7FF0000000000000ULL
 #define TAG_MASK            (0x000F000000000000ULL | 0x8000000000000000ULL)
 #define PAYLOAD_MASK        0x0000FFFFFFFFFFFFULL // 48-bit pointer mask
+
+struct RegexData {
+    std::string pattern;
+    std::string lastPart;
+    bool isGlobal;
+    mutable std::shared_ptr<std::regex> re;
+    RegexData(std::string p, std::string l, bool g = false) : pattern(p), lastPart(l), isGlobal(g), re(nullptr) {}
+};
 
 struct DateData {
     double timestamp;
@@ -92,8 +125,11 @@ struct DateData {
 struct ErrorData {
     std::string message;
     int line;
-    ErrorData(std::string msg, int l) : message(std::move(msg)), line(l) {}
+    ErrorData(std::string msg, int l = -1) : message(std::move(msg)), line(l) {}
 };
+
+struct FutureData;
+struct TimerData;
 
 struct Value;
 struct ValueHash {
@@ -106,6 +142,8 @@ struct ValueEqual {
 struct MapData {
     std::unordered_map<Value, Value, ValueHash, ValueEqual> map;
 };
+
+bool checkTypeInternal(const struct Value& val, const std::string& typeStr);
 
 Value parseJSONValue(const std::string& json, size_t& pos, class Interpreter& interp);
 std::string stringifyJSON(const Value& val, int indent = 0);
@@ -144,8 +182,12 @@ struct Value {
     Value(MapData* m) : bits(VALUE_QNAN | TAG_MAP | ((uint64_t)m & PAYLOAD_MASK)) {}
     Value(class VMFunction* f) : bits(VALUE_QNAN | TAG_VM_FUNCTION | ((uint64_t)f & PAYLOAD_MASK)) {}
     Value(ErrorData* e) : bits(VALUE_QNAN | TAG_ERROR | ((uint64_t)e & PAYLOAD_MASK)) {}
-
-    static class Interpreter* CurrentContext;
+    Value(RegexData* r) : bits(VALUE_QNAN | TAG_REGEX | ((uint64_t)r & PAYLOAD_MASK)) {}
+    Value(struct FutureData* f) : bits(VALUE_QNAN | TAG_FUTURE | ((uint64_t)f & PAYLOAD_MASK)) {}
+    Value(struct TimerData* t) : bits(VALUE_QNAN | TAG_TIMER | ((uint64_t)t & PAYLOAD_MASK)) {}
+    
+    static Heap GlobalHeap;
+    static thread_local class Interpreter* CurrentContext;
     static void registerString(std::shared_ptr<std::string> s);
     static void registerArray(std::shared_ptr<std::vector<Value>> a);
     static void registerObject(std::shared_ptr<std::vector<std::pair<std::string, Value>>> o);
@@ -153,9 +195,14 @@ struct Value {
     static void registerDate(std::shared_ptr<struct DateData> d);
     static void registerMap(std::shared_ptr<struct MapData> m);
     static void registerError(std::shared_ptr<struct ErrorData> e);
+    static void registerRegex(std::shared_ptr<struct RegexData> r);
+    static void registerFuture(std::shared_ptr<struct FutureData> f);
+    static void registerTimer(std::shared_ptr<struct TimerData> t);
     static void registerInstance(std::shared_ptr<class SpInstance> i);
     static void registerClass(std::shared_ptr<class SpClass> c);
     static void registerFunction(std::shared_ptr<ICallable> f);
+    // types.h/cpp will handle this
+    static void joinAllFutures();
 
     inline bool isType(uint64_t tag) const { return (bits & (QNAN_MASK | TAG_MASK)) == (VALUE_QNAN | tag); }
 
@@ -176,6 +223,9 @@ struct Value {
     inline bool isDate() const { return isType(TAG_DATE); }
     inline bool isMap() const { return isType(TAG_MAP); }
     inline bool isError() const { return isType(TAG_ERROR); }
+    inline bool isRegex() const { return isType(TAG_REGEX); }
+    inline bool isFuture() const { return isType(TAG_FUTURE); }
+    inline bool isTimer() const { return isType(TAG_TIMER); }
     
     inline std::string* asString() const { return (std::string*)(bits & PAYLOAD_MASK); }
     inline std::vector<Value>* asArray() const { return (std::vector<Value>*)(bits & PAYLOAD_MASK); }
@@ -187,6 +237,9 @@ struct Value {
     inline int64_t* asBigInt() const { return (int64_t*)(bits & PAYLOAD_MASK); }
     inline DateData* asDate() const { return (DateData*)(bits & PAYLOAD_MASK); }
     inline MapData* asMap() const { return (MapData*)(bits & PAYLOAD_MASK); }
+    inline RegexData* asRegex() const { return (RegexData*)(bits & PAYLOAD_MASK); }
+    inline struct FutureData* asFuture() const { return (struct FutureData*)(bits & PAYLOAD_MASK); }
+    inline struct TimerData* asTimer() const { return (struct TimerData*)(bits & PAYLOAD_MASK); }
 
     inline double asNumber() const { 
         union { uint64_t u; double d; } u;
@@ -198,6 +251,7 @@ struct Value {
     // Operator overloads for AOT Transpiler
     std::string toString() const;
     std::string toPureString() const;
+    Value getBuiltinMethod(const std::string& property, class Interpreter& interp) const;
     Value operator+(const Value& other) const;
     Value operator-(const Value& other) const { return Value(asNumber() - other.asNumber()); }
     Value operator*(const Value& other) const { return Value(asNumber() * other.asNumber()); }
@@ -208,14 +262,7 @@ struct Value {
     }
     Value operator-() const { return Value(-asNumber()); }
     
-    Value operator==(const Value& other) const {
-        if (bits == other.bits) return Value(true);
-        if (isNil() || isUndefined() || other.isNil() || other.isUndefined()) return Value(false);
-        if (isNumber() && other.isNumber()) return Value(asNumber() == other.asNumber());
-        if (isBigInt() && other.isBigInt()) return Value(*asBigInt() == *other.asBigInt());
-        if (isString() && other.isString()) return Value(*asString() == *other.asString());
-        return Value(false);
-    }
+    Value operator==(const Value& other) const;
     Value operator!=(const Value& other) const { return !(*this == other); }
     Value operator<(const Value& other) const { return Value(asNumber() < other.asNumber()); }
     Value operator<=(const Value& other) const { return Value(asNumber() <= other.asNumber()); }
@@ -233,6 +280,32 @@ struct Value {
     }
 
     static bool useColor;
+    static std::unordered_map<std::string, std::string> Layouts;
+};
+
+struct FutureData {
+    std::shared_ptr<std::future<Value>> fut;
+    bool is_ready;
+    Value result;
+    FutureData(std::shared_ptr<std::future<Value>> f) : fut(std::move(f)), is_ready(false) {}
+    Value get() {
+        if (!is_ready) {
+            result = fut->get();
+            is_ready = true;
+        }
+        return result;
+    }
+};
+
+struct TimerData {
+    std::atomic<bool> active{true};
+    std::thread thread;
+    TimerData() : active(true) {}
+    ~TimerData() {
+        active = false;
+        if (thread.joinable()) thread.detach();
+    }
+    void stop() { active = false; }
 };
 
 // Stream insertion
@@ -249,10 +322,42 @@ public:
 
 std::ostream& operator<<(std::ostream& os, const Value& val);
 
+struct TypeAnnotation {
+    std::string typeName;
+    std::vector<TypeAnnotation> generics;
+    std::vector<TypeAnnotation> unions;
+    std::vector<TypeAnnotation> intersections;
+    bool isPresent = false;
+
+    std::string toString() const {
+        if (!isPresent) return "any";
+        std::string res;
+        if (!unions.empty()) {
+            for (size_t i = 0; i < unions.size(); ++i) {
+                res += unions[i].toString() + (i == unions.size() - 1 ? "" : " | ");
+            }
+            return res;
+        }
+        if (!intersections.empty()) {
+            for (size_t i = 0; i < intersections.size(); ++i) {
+                res += intersections[i].toString() + (i == intersections.size() - 1 ? "" : " & ");
+            }
+            return res;
+        }
+        if (generics.empty()) return typeName;
+        res = typeName + "<";
+        for (size_t i = 0; i < generics.size(); ++i) {
+            res += generics[i].toString() + (i == generics.size() - 1 ? "" : ", ");
+        }
+        return res + ">";
+    }
+};
+
 struct PropertyDeclaration {
     std::string name;
     std::shared_ptr<class Expression> initializer;
     Value initializer_value;
+    TypeAnnotation type;
     bool isPrivate = false;
     bool isReadonly = false;
     int line = -1;
@@ -260,8 +365,9 @@ struct PropertyDeclaration {
 
 struct FunctionDeclaration {
     std::string name;
-    std::vector<std::string> parameters;
+    std::vector<std::pair<std::string, TypeAnnotation>> parameters;
     std::shared_ptr<class Expression> body;
+    TypeAnnotation returnType;
     int localCount = 0;
     int index = -1;
     bool hasRest = false;

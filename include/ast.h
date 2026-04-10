@@ -111,6 +111,16 @@ public:
     Value evaluate(Interpreter& interpreter) override;
 };
 
+class IndexAssignmentExpression : public Expression {
+public:
+    std::shared_ptr<Expression> object;
+    std::shared_ptr<Expression> index;
+    std::shared_ptr<Expression> value;
+    IndexAssignmentExpression(std::shared_ptr<Expression> obj, std::shared_ptr<Expression> idx, std::shared_ptr<Expression> v)
+        : object(std::move(obj)), index(std::move(idx)), value(std::move(v)) {}
+    Value evaluate(Interpreter& interpreter) override;
+};
+
 struct DestructuringBinding {
     std::string name;             // variable name if this is a leaf binding
     std::string propertyName;     // for object { prop: name }
@@ -146,6 +156,7 @@ public:
 struct VariableDeclaration {
     std::string name;
     std::shared_ptr<Expression> value;
+    TypeAnnotation type;
     int index = -1;
     bool isMutable = false; // true for 'var', false for 'set'
     int line = -1;
@@ -168,6 +179,13 @@ struct WarnStatement {
     int line = -1;
 };
 
+struct LayoutDeclaration {
+    std::string name;
+    std::vector<PropertyDeclaration> properties;
+    TypeAnnotation aliasType;
+    int line = -1;
+};
+
 struct ClassDeclaration {
     std::string name;
     bool isAbstract = false;
@@ -175,6 +193,14 @@ struct ClassDeclaration {
     std::vector<FunctionDeclaration> methods;
     int line = -1;
 };
+
+class LayoutExpression : public Expression {
+public:
+    std::vector<PropertyDeclaration> properties;
+    LayoutExpression(std::vector<PropertyDeclaration> p) : properties(std::move(p)) {}
+    Value evaluate(Interpreter& interpreter) override;
+};
+
 
 class IfExpression : public Expression {
 public:
@@ -219,6 +245,12 @@ public:
     std::vector<std::shared_ptr<Expression>> arguments;
     ProcessSpawnExpression(std::shared_ptr<Expression> cmd, std::vector<std::shared_ptr<Expression>> args)
         : command(std::move(cmd)), arguments(std::move(args)) {}
+    Value evaluate(Interpreter& interpreter) override;
+};
+class ProcessSleepExpression : public Expression {
+public:
+    std::shared_ptr<Expression> delay;
+    ProcessSleepExpression(std::shared_ptr<Expression> d) : delay(std::move(d)) {}
     Value evaluate(Interpreter& interpreter) override;
 };
 
@@ -342,7 +374,7 @@ struct UseStatement {
 };
 
 struct ExportStatement {
-    std::variant<VariableDeclaration, DestructuringDeclaration, FunctionDeclaration> declaration;
+    std::variant<VariableDeclaration, DestructuringDeclaration, FunctionDeclaration, LayoutDeclaration> declaration;
     int line = -1;
 };
 
@@ -361,17 +393,19 @@ struct ForStatement {
     int line = -1;
 };
 
-using Statement = std::variant<VariableDeclaration, DestructuringDeclaration, PrintStatement, WarnStatement, FunctionDeclaration, ReturnStatement, UseStatement, std::shared_ptr<Expression>, ExportStatement, WhileStatement, ForStatement, ClassDeclaration>;
+
+using Statement = std::variant<VariableDeclaration, DestructuringDeclaration, PrintStatement, WarnStatement, FunctionDeclaration, ReturnStatement, UseStatement, std::shared_ptr<Expression>, ExportStatement, WhileStatement, ForStatement, ClassDeclaration, LayoutDeclaration>;
 
 class LambdaExpression : public Expression {
 public:
-    std::vector<std::string> parameters;
+    std::vector<std::pair<std::string, TypeAnnotation>> parameters;
     std::shared_ptr<Expression> body;
+    TypeAnnotation returnType;
     int localCount = 0;
     int index = -1;
     bool hasRest = false;
-    LambdaExpression(std::vector<std::string> p, std::shared_ptr<Expression> b, bool r)
-        : parameters(std::move(p)), body(std::move(b)), hasRest(r) {}
+    LambdaExpression(std::vector<std::pair<std::string, TypeAnnotation>> p, std::shared_ptr<Expression> b, bool r, TypeAnnotation ret = TypeAnnotation())
+        : parameters(std::move(p)), body(std::move(b)), hasRest(r), returnType(std::move(ret)) {}
     Value evaluate(Interpreter& interpreter) override;
 };
 
@@ -388,6 +422,46 @@ public:
     std::shared_ptr<Expression> callee;
     std::vector<std::shared_ptr<Expression>> arguments;
     CallExpression(std::shared_ptr<Expression> c, std::vector<std::shared_ptr<Expression>> args) : callee(std::move(c)), arguments(std::move(args)) {}
+    Value evaluate(Interpreter& interpreter) override;
+};
+
+class AsyncExpression : public Expression {
+public:
+    std::shared_ptr<Expression> body;
+    explicit AsyncExpression(std::shared_ptr<Expression> b) : body(std::move(b)) {}
+    Value evaluate(Interpreter& interpreter) override;
+};
+
+class AfterExpression : public Expression {
+public:
+    std::shared_ptr<Expression> delay;
+    std::shared_ptr<Expression> body;
+    AfterExpression(std::shared_ptr<Expression> d, std::shared_ptr<Expression> b)
+        : delay(std::move(d)), body(std::move(b)) {}
+    Value evaluate(Interpreter& interpreter) override;
+};
+
+class EveryExpression : public Expression {
+public:
+    std::shared_ptr<Expression> delay;
+    std::shared_ptr<Expression> body;
+    EveryExpression(std::shared_ptr<Expression> d, std::shared_ptr<Expression> b)
+        : delay(std::move(d)), body(std::move(b)) {}
+    Value evaluate(Interpreter& interpreter) override;
+};
+
+class AsExpression : public Expression {
+public:
+    std::shared_ptr<Expression> left;
+    TypeAnnotation type;
+    AsExpression(std::shared_ptr<Expression> l, TypeAnnotation t) : left(std::move(l)), type(std::move(t)) {}
+    Value evaluate(Interpreter& interpreter) override;
+};
+
+class TypeofExpression : public Expression {
+public:
+    std::shared_ptr<Expression> expr;
+    TypeofExpression(std::shared_ptr<Expression> e) : expr(std::move(e)) {}
     Value evaluate(Interpreter& interpreter) override;
 };
 
